@@ -67,6 +67,7 @@ namespace Vstancer.Client
         // Added additional config fields
         public float steeringLockMinVal = 30f;
         public float steeringLockMaxVal = 90f;
+        public float suspensionHeightMinVal = -0.1f;
         public float suspensionHeightMaxVal = 0.1f;
 
         private float FloatPrecision = 0.001f;
@@ -901,13 +902,14 @@ namespace Vstancer.Client
                 rearMaxCamber = config.GetFloatValue("rearMaxCamber", rearMaxCamber);
                 steeringLockMinVal = config.GetFloatValue("steeringLockMinVal", steeringLockMinVal);
                 steeringLockMaxVal = config.GetFloatValue("steeringLockMaxVal", steeringLockMaxVal);
+                suspensionHeightMinVal = config.GetFloatValue("suspensionHeightMinVal", suspensionHeightMinVal);
                 suspensionHeightMaxVal = config.GetFloatValue("suspensionHeightMaxVal", suspensionHeightMaxVal);
                 timer = config.GetLongValue("timer", timer);
                 debug = config.GetBoolValue("debug", debug);
                 exposeCommand = config.GetBoolValue("exposeCommand", exposeCommand);
                 exposeEvent = config.GetBoolValue("exposeEvent", exposeEvent);
 
-                Debug.WriteLine($"{ScriptName}: Settings {nameof(frontMaxOffset)}={frontMaxOffset} {nameof(frontMaxCamber)}={frontMaxCamber} {nameof(rearMaxOffset)}={rearMaxOffset} {nameof(rearMaxCamber)}={rearMaxCamber} {nameof(steeringLockMinVal)}={steeringLockMinVal} {nameof(steeringLockMaxVal)}={steeringLockMaxVal} {nameof(suspensionHeightMaxVal)}={suspensionHeightMaxVal} {nameof(timer)}={timer} {nameof(debug)}={debug} {nameof(ScriptRange)}={ScriptRange}");
+                Debug.WriteLine($"{ScriptName}: Settings {nameof(frontMaxOffset)}={frontMaxOffset} {nameof(frontMaxCamber)}={frontMaxCamber} {nameof(rearMaxOffset)}={rearMaxOffset} {nameof(rearMaxCamber)}={rearMaxCamber} {nameof(steeringLockMinVal)}={steeringLockMinVal} {nameof(steeringLockMaxVal)}={steeringLockMaxVal} {nameof(suspensionHeightMinVal)}={suspensionHeightMinVal} {nameof(suspensionHeightMaxVal)}={suspensionHeightMaxVal} {nameof(timer)}={timer} {nameof(debug)}={debug} {nameof(ScriptRange)}={ScriptRange}");
             }
         }
 

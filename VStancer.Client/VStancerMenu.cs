@@ -65,6 +65,7 @@ namespace Vstancer.Client
         private float rearMaxCamber => vstancerEditor.rearMaxCamber;
         private float steeringLockMinVal => vstancerEditor.steeringLockMinVal;
         private float steeringLockMaxVal => vstancerEditor.steeringLockMaxVal;
+        private float suspensionHeightMinVal => vstancerEditor.suspensionHeightMinVal;
         private float suspensionHeightMaxVal => vstancerEditor.suspensionHeightMaxVal;
         private bool CurrentPresetIsValid => vstancerEditor.CurrentPresetIsValid;
         private VStancerPreset currentPreset => vstancerEditor.currentPreset;
@@ -191,11 +192,15 @@ namespace Vstancer.Client
             AddDynamicFloatList(editorMenu, "Rear Track Width", -currentPreset.DefaultOffsetX[currentPreset.FrontWheelsCount], -currentPreset.OffsetX[currentPreset.FrontWheelsCount], rearMaxOffset, RearOffsetID);
             AddDynamicFloatList(editorMenu, "Front Camber", currentPreset.DefaultRotationY[0], currentPreset.RotationY[0], frontMaxCamber, FrontRotationID);
             AddDynamicFloatList(editorMenu, "Rear Camber", currentPreset.DefaultRotationY[currentPreset.FrontWheelsCount], currentPreset.RotationY[currentPreset.FrontWheelsCount], rearMaxCamber, RearRotationID);
-            var callback = FloatChangeCallback("Steering Lock", currentPreset.SteeringLock, steeringLockMinVal, steeringLockMaxVal, 1f);
-            var newitem = new MenuDynamicListItem("Steering Lock", currentPreset.SteeringLock.ToString("F3"), callback) { ItemData = SteeringLockID };
-            editorMenu.AddMenuItem(newitem);
-            AddDynamicFloatList(editorMenu, "Suspension Height", currentPreset.DefaultSuspensionHeight, currentPreset.SuspensionHeight, suspensionHeightMaxVal, SuspensionHeightID);
-            
+            // Steering lock, custom min max
+            var callbackSL = FloatChangeCallback("Steering Lock", currentPreset.SteeringLock, steeringLockMinVal, steeringLockMaxVal, 1f);
+            var newitemSL = new MenuDynamicListItem("Steering Lock", currentPreset.SteeringLock.ToString("F3"), callbackSL) { ItemData = SteeringLockID };
+            editorMenu.AddMenuItem(newitemSL);
+            // Suspension height, custom min max
+            var callbackSH = FloatChangeCallback("Suspension Height", currentPreset.SuspensionHeight, suspensionHeightMinVal, suspensionHeightMaxVal, FloatStep);
+            var newitemSH = new MenuDynamicListItem("Suspension Height", currentPreset.SuspensionHeight.ToString("F3"), callbackSH) { ItemData = SuspensionHeightID };
+            editorMenu.AddMenuItem(newitemSH);
+
             editorMenu.AddMenuItem(new MenuItem("Reset", "Restores the default values") { ItemData = ResetID });
         }
 

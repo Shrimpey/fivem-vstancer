@@ -64,6 +64,10 @@ namespace Vstancer.Client
         public float frontMaxCamber = 0.20f;
         public float rearMaxOffset = 0.25f;
         public float rearMaxCamber = 0.20f;
+        // Added additional config fields
+        public float steeringLockMinVal = 30f;
+        public float steeringLockMaxVal = 90f;
+        public float suspensionHeightMaxVal = 0.1f;
 
         private float FloatPrecision = 0.001f;
         private long timer = 1000;
@@ -79,11 +83,15 @@ namespace Vstancer.Client
         public const string FrontRotationID = "vstancer_rot_f";
         public const string RearOffsetID = "vstancer_off_r";
         public const string RearRotationID = "vstancer_rot_r";
+        public const string SteeringLockID = "vstancer_steer_lock";
+        public const string SuspensionHeightID = "vstancer_susp_height";
 
         public const string DefaultFrontOffsetID = "vstancer_off_f_def";
         public const string DefaultFrontRotationID = "vstancer_rot_f_def";
         public const string DefaultRearOffsetID = "vstancer_off_r_def";
         public const string DefaultRearRotationID = "vstancer_rot_r_def";
+        public const string DefaultSteeringLockID = "vstancer_steer_lock_def";
+        public const string DefaultSuspensionHeightID = "vstancer_susp_height_def";
 
         public const string ResetID = "vstancer_reset";
 
@@ -168,6 +176,15 @@ namespace Vstancer.Client
             {
                 currentPreset.SetOffsetRear(-value);
                 defaultValue = currentPreset.DefaultOffsetX[currentPreset.FrontWheelsCount];
+            }
+            else if (id == SteeringLockID) {
+                currentPreset.SetSteeringLock(value);
+                defaultValue = currentPreset.DefaultSteeringLock;
+            }
+            else if (id == SuspensionHeightID) {
+                currentPreset.SetSuspensionHeight(value);
+                defaultValue = currentPreset.DefaultSuspensionHeight;
+                //SetVehicleFixed(currentVehicle);
             }
 
             // Force one single refresh to update rendering at correct position after reset
@@ -277,7 +294,7 @@ namespace Vstancer.Client
             }
 
 
-            Exports.Add("SetVstancerPreset", new Action<int, float, float, float, float, object, object, object, object>(SetVstancerPreset));
+            Exports.Add("SetVstancerPreset", new Action<int, float, float, float, float, float, float, object, object, object, object, object, object>(SetVstancerPreset));
             Exports.Add("GetVstancerPreset", new Func<int, float[]>(GetVstancerPreset));
 
             // Create a script for the menu ...
@@ -434,6 +451,11 @@ namespace Vstancer.Client
             DecorRegister(RearRotationID, 1);
             DecorRegister(DefaultRearOffsetID, 1);
             DecorRegister(DefaultRearRotationID, 1);
+
+            DecorRegister(SteeringLockID, 1);
+            DecorRegister(DefaultSteeringLockID, 1);
+            DecorRegister(SuspensionHeightID, 1);
+            DecorRegister(DefaultSuspensionHeightID, 1);
         }
 
         /// <summary>
@@ -465,6 +487,18 @@ namespace Vstancer.Client
 
             if (DecorExistOn(vehicle, DefaultRearRotationID))
                 DecorRemove(vehicle, DefaultRearRotationID);
+
+            if (DecorExistOn(vehicle, SteeringLockID))
+                DecorRemove(vehicle, SteeringLockID);
+
+            if (DecorExistOn(vehicle, DefaultSteeringLockID))
+                DecorRemove(vehicle, DefaultSteeringLockID);
+
+            if (DecorExistOn(vehicle, SuspensionHeightID))
+                DecorRemove(vehicle, SuspensionHeightID);
+
+            if (DecorExistOn(vehicle, DefaultSuspensionHeightID))
+                DecorRemove(vehicle, DefaultSuspensionHeightID);
         }
 
         /// <summary>
@@ -487,14 +521,18 @@ namespace Vstancer.Client
         /// <param name="frontRotation">The front rotation value</param>
         /// <param name="rearOffset">The rear offset value</param>
         /// <param name="rearRotation">The rear rotation value</param>
+        /// <param name="steeringLock">Steering lock value</param>
+        /// <param name="suspensionHeight">Suspension height value</param>
         /// <param name="defaultFrontOffset">The default front offset value</param>
         /// <param name="defaultFrontRotation">The default front rotation value</param>
         /// <param name="defaultRearOffset">The default rear offset value</param>
         /// <param name="defaultRearRotation">The default rear rotation value</param>
-        public void SetVstancerPreset(int vehicle, float frontOffset, float frontRotation, float rearOffset, float rearRotation, object defaultFrontOffset = null, object defaultFrontRotation = null, object defaultRearOffset = null, object defaultRearRotation = null)
+        /// <param name="defaultSteeringLock">The default steering lock value</param>
+        /// <param name="defaultSuspensionHeight">The default suspension height value</param>
+        public void SetVstancerPreset(int vehicle, float frontOffset, float frontRotation, float rearOffset, float rearRotation, float steeringLock, float suspensionHeight, object defaultFrontOffset = null, object defaultFrontRotation = null, object defaultRearOffset = null, object defaultRearRotation = null, object defaultSteeringLock = null, object defaultSuspensionHeight = null)
         {
             if (debug)
-                Debug.WriteLine($"{ScriptName}: SetVstancerPreset parameters {frontOffset} {frontRotation} {rearOffset} {rearRotation} {defaultFrontOffset} {defaultFrontRotation} {defaultRearOffset} {defaultRearRotation}");
+                Debug.WriteLine($"{ScriptName}: SetVstancerPreset parameters {frontOffset} {frontRotation} {rearOffset} {rearRotation} {steeringLock} {suspensionHeight} {defaultFrontOffset} {defaultFrontRotation} {defaultRearOffset} {defaultRearRotation} {defaultSteeringLock} {defaultSuspensionHeight}");
 
             if (!DoesEntityExist(vehicle))
                 return;
@@ -502,7 +540,7 @@ namespace Vstancer.Client
             int wheelsCount = GetVehicleNumberOfWheels(vehicle);
             int frontCount = VStancerPreset.CalculateFrontWheelsCount(wheelsCount);
 
-            float off_f_def, rot_f_def, off_r_def, rot_r_def;
+            float off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def;
 
             if (defaultFrontOffset != null && defaultFrontOffset is float)
                 off_f_def = (float)defaultFrontOffset;
@@ -524,9 +562,19 @@ namespace Vstancer.Client
             else
                 rot_r_def = DecorExistOn(vehicle, DefaultRearRotationID) ? DecorGetFloat(vehicle, DefaultRearRotationID) : GetVehicleWheelYRotation(vehicle, frontCount);
 
+            if (defaultSteeringLock != null && defaultSteeringLock is float)
+                steering_lock_def = (float)defaultSteeringLock;
+            else
+                steering_lock_def = DecorExistOn(vehicle, DefaultSteeringLockID) ? DecorGetFloat(vehicle, DefaultSteeringLockID) : GetVehicleSteeringAngle(vehicle);
+
+            if (defaultSuspensionHeight != null && defaultSuspensionHeight is float)
+                susp_height_def = (float)defaultSuspensionHeight;
+            else
+                susp_height_def = DecorExistOn(vehicle, DefaultSuspensionHeightID) ? DecorGetFloat(vehicle, DefaultSuspensionHeightID) : GetVehicleSuspensionHeight(vehicle);
+
             if (vehicle == currentVehicle)
             {
-                currentPreset = new VStancerPreset(wheelsCount, frontOffset, frontRotation, rearOffset, rearRotation, off_f_def, rot_f_def, off_r_def, rot_r_def);
+                currentPreset = new VStancerPreset(wheelsCount, frontOffset, frontRotation, rearOffset, rearRotation, steeringLock, suspensionHeight, off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def);
                 PresetChanged?.Invoke(this, EventArgs.Empty);
             }
             else
@@ -535,11 +583,15 @@ namespace Vstancer.Client
                 UpdateFloatDecorator(vehicle, DefaultFrontRotationID, rot_f_def, frontRotation);
                 UpdateFloatDecorator(vehicle, DefaultRearOffsetID, off_r_def, rearOffset);
                 UpdateFloatDecorator(vehicle, DefaultRearRotationID, rot_r_def, rearRotation);
+                UpdateFloatDecorator(vehicle, DefaultSteeringLockID, steering_lock_def, steeringLock);
+                UpdateFloatDecorator(vehicle, DefaultSuspensionHeightID, susp_height_def, suspensionHeight);
 
                 UpdateFloatDecorator(vehicle, FrontOffsetID, frontOffset, off_f_def);
                 UpdateFloatDecorator(vehicle, FrontRotationID, frontRotation, rot_f_def);
                 UpdateFloatDecorator(vehicle, RearOffsetID, rearOffset, off_r_def);
                 UpdateFloatDecorator(vehicle, RearRotationID, rearRotation, rot_r_def);
+                UpdateFloatDecorator(vehicle, SteeringLockID, steeringLock, steering_lock_def);
+                UpdateFloatDecorator(vehicle, SuspensionHeightID, suspensionHeight, susp_height_def);
             }
         }
 
@@ -585,17 +637,25 @@ namespace Vstancer.Client
             float[] DefaultRotationY = preset.DefaultRotationY;
             float[] OffsetX = preset.OffsetX;
             float[] RotationY = preset.RotationY;
+            float SteeringLock = preset.SteeringLock;
+            float DefaultSteeringLock = preset.DefaultSteeringLock;
+            float SuspensionHeight = preset.SuspensionHeight;
+            float DefaultSuspensionHeight = preset.DefaultSuspensionHeight;
             int frontCount = preset.FrontWheelsCount;
 
             UpdateFloatDecorator(vehicle, DefaultFrontOffsetID, DefaultOffsetX[0], OffsetX[0]);
             UpdateFloatDecorator(vehicle, DefaultFrontRotationID, DefaultRotationY[0], RotationY[0]);
             UpdateFloatDecorator(vehicle, DefaultRearOffsetID, DefaultOffsetX[frontCount], OffsetX[frontCount]);
             UpdateFloatDecorator(vehicle, DefaultRearRotationID, DefaultRotationY[frontCount], RotationY[frontCount]);
+            UpdateFloatDecorator(vehicle, DefaultSteeringLockID, DefaultSteeringLock, SteeringLock);
+            UpdateFloatDecorator(vehicle, DefaultSuspensionHeightID, DefaultSuspensionHeight, SuspensionHeight);
 
             UpdateFloatDecorator(vehicle, FrontOffsetID, OffsetX[0], DefaultOffsetX[0]);
             UpdateFloatDecorator(vehicle, FrontRotationID, RotationY[0], DefaultRotationY[0]);
             UpdateFloatDecorator(vehicle, RearOffsetID, OffsetX[frontCount], DefaultOffsetX[frontCount]);
             UpdateFloatDecorator(vehicle, RearRotationID, RotationY[frontCount], DefaultRotationY[frontCount]);
+            UpdateFloatDecorator(vehicle, SteeringLockID, SteeringLock, DefaultSteeringLock);
+            UpdateFloatDecorator(vehicle, SuspensionHeightID, SuspensionHeight, DefaultSuspensionHeight);
         }
 
         /// <summary>
@@ -616,13 +676,17 @@ namespace Vstancer.Client
             float rot_f_def = DecorExistOn(vehicle, DefaultFrontRotationID) ? DecorGetFloat(vehicle, DefaultFrontRotationID) : GetVehicleWheelYRotation(vehicle, 0);
             float off_r_def = DecorExistOn(vehicle, DefaultRearOffsetID) ? DecorGetFloat(vehicle, DefaultRearOffsetID) : GetVehicleWheelXOffset(vehicle, frontCount);
             float rot_r_def = DecorExistOn(vehicle, DefaultRearRotationID) ? DecorGetFloat(vehicle, DefaultRearRotationID) : GetVehicleWheelYRotation(vehicle, frontCount);
+            float steering_lock_def = DecorExistOn(vehicle, DefaultSteeringLockID) ? DecorGetFloat(vehicle, DefaultSteeringLockID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock");
+            float susp_height_def = DecorExistOn(vehicle, DefaultSuspensionHeightID) ? DecorGetFloat(vehicle, DefaultSuspensionHeightID) : GetVehicleSuspensionHeight(vehicle);
 
             float off_f = DecorExistOn(vehicle, FrontOffsetID) ? DecorGetFloat(vehicle, FrontOffsetID) : off_f_def;
             float rot_f = DecorExistOn(vehicle, FrontRotationID) ? DecorGetFloat(vehicle, FrontRotationID) : rot_f_def;
             float off_r = DecorExistOn(vehicle, RearOffsetID) ? DecorGetFloat(vehicle, RearOffsetID) : off_r_def;
             float rot_r = DecorExistOn(vehicle, RearRotationID) ? DecorGetFloat(vehicle, RearRotationID) : rot_r_def;
+            float steering_lock = DecorExistOn(vehicle, SteeringLockID) ? DecorGetFloat(vehicle, SteeringLockID) : steering_lock_def;
+            float susp_height = DecorExistOn(vehicle, SuspensionHeightID) ? DecorGetFloat(vehicle, SuspensionHeightID) : susp_height_def;
 
-            return new VStancerPreset(wheelsCount, off_f, rot_f, off_r, rot_r, off_f_def, rot_f_def, off_r_def, rot_r_def);
+            return new VStancerPreset(wheelsCount, off_f, rot_f, off_r, rot_r, steering_lock, susp_height, off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def);
         }
 
         /// <summary>
@@ -639,6 +703,8 @@ namespace Vstancer.Client
                 SetVehicleWheelXOffset(vehicle, index, preset.OffsetX[index]);
                 SetVehicleWheelYRotation(vehicle, index, preset.RotationY[index]);
             }
+            SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock", preset.SteeringLock);
+            SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise", preset.SuspensionHeight);
         }
 
         /// <summary>
@@ -701,6 +767,16 @@ namespace Vstancer.Client
                         SetVehicleWheelYRotation(vehicle, index, -value);
                 }
             }
+
+            if (DecorExistOn(vehicle, SteeringLockID)) {
+                float value = DecorGetFloat(vehicle, SteeringLockID);
+                SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock", value);
+            }
+
+            if (DecorExistOn(vehicle, SuspensionHeightID)) {
+                float value = DecorGetFloat(vehicle, SuspensionHeightID);
+                SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise", value);
+            }
         }
 
         /// <summary>
@@ -744,6 +820,16 @@ namespace Vstancer.Client
                 s.AppendLine($"{RearRotationID}: {value}");
             }
 
+            if (DecorExistOn(vehicle, SteeringLockID)) {
+                float value = DecorGetFloat(vehicle, SteeringLockID);
+                s.AppendLine($"{SteeringLockID}: {value}");
+            }
+
+            if (DecorExistOn(vehicle, SuspensionHeightID)) {
+                float value = DecorGetFloat(vehicle, SuspensionHeightID);
+                s.AppendLine($"{SuspensionHeightID}: {value}");
+            }
+
             Debug.WriteLine(s.ToString());
         }
 
@@ -773,10 +859,14 @@ namespace Vstancer.Client
                 DecorExistOn(entity, FrontRotationID) ||
                 DecorExistOn(entity, RearOffsetID) ||
                 DecorExistOn(entity, RearRotationID) ||
+                DecorExistOn(entity, SteeringLockID) ||
+                DecorExistOn(entity, SuspensionHeightID) ||
                 DecorExistOn(entity, DefaultFrontOffsetID) ||
                 DecorExistOn(entity, DefaultFrontRotationID) ||
                 DecorExistOn(entity, DefaultRearOffsetID) ||
-                DecorExistOn(entity, DefaultRearRotationID)
+                DecorExistOn(entity, DefaultRearRotationID) ||
+                DecorExistOn(entity, DefaultSteeringLockID) ||
+                DecorExistOn(entity, DefaultSuspensionHeightID)
                 );
         }
 
@@ -809,12 +899,15 @@ namespace Vstancer.Client
                 frontMaxCamber = config.GetFloatValue("frontMaxCamber", frontMaxCamber);
                 rearMaxOffset = config.GetFloatValue("rearMaxOffset", rearMaxOffset);
                 rearMaxCamber = config.GetFloatValue("rearMaxCamber", rearMaxCamber);
+                steeringLockMinVal = config.GetFloatValue("steeringLockMinVal", steeringLockMinVal);
+                steeringLockMaxVal = config.GetFloatValue("steeringLockMaxVal", steeringLockMaxVal);
+                suspensionHeightMaxVal = config.GetFloatValue("suspensionHeightMaxVal", suspensionHeightMaxVal);
                 timer = config.GetLongValue("timer", timer);
                 debug = config.GetBoolValue("debug", debug);
                 exposeCommand = config.GetBoolValue("exposeCommand", exposeCommand);
                 exposeEvent = config.GetBoolValue("exposeEvent", exposeEvent);
 
-                Debug.WriteLine($"{ScriptName}: Settings {nameof(frontMaxOffset)}={frontMaxOffset} {nameof(frontMaxCamber)}={frontMaxCamber} {nameof(rearMaxOffset)}={rearMaxOffset} {nameof(rearMaxCamber)}={rearMaxCamber} {nameof(timer)}={timer} {nameof(debug)}={debug} {nameof(ScriptRange)}={ScriptRange}");
+                Debug.WriteLine($"{ScriptName}: Settings {nameof(frontMaxOffset)}={frontMaxOffset} {nameof(frontMaxCamber)}={frontMaxCamber} {nameof(rearMaxOffset)}={rearMaxOffset} {nameof(rearMaxCamber)}={rearMaxCamber} {nameof(steeringLockMinVal)}={steeringLockMinVal} {nameof(steeringLockMaxVal)}={steeringLockMaxVal} {nameof(suspensionHeightMaxVal)}={suspensionHeightMaxVal} {nameof(timer)}={timer} {nameof(debug)}={debug} {nameof(ScriptRange)}={ScriptRange}");
             }
         }
 

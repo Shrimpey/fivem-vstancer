@@ -13,6 +13,10 @@ namespace Vstancer.Client
         public float[] DefaultOffsetX { get; private set; }
         public float[] RotationY { get; set; }
         public float[] OffsetX { get; set; }
+        public float SteeringLock { get; set; }
+        public float SuspensionHeight { get; set; }
+        public float DefaultSteeringLock { get; set; }
+        public float DefaultSuspensionHeight { get; set; }
 
         public void SetOffsetFront(float value)
         {
@@ -37,6 +41,14 @@ namespace Vstancer.Client
             for (int index = FrontWheelsCount; index < WheelsCount; index++)
                 RotationY[index] = (index % 2 == 0) ? value : -value;
         }
+        
+        public void SetSteeringLock(float value) {
+            SteeringLock = value;
+        }
+
+        public void SetSuspensionHeight(float value) {
+            SuspensionHeight = value;
+        }
 
         public bool IsEdited
         {
@@ -47,6 +59,8 @@ namespace Vstancer.Client
                     if ((DefaultOffsetX[index] != OffsetX[index]) || (DefaultRotationY[index] != RotationY[index]))
                         return true;
                 }
+                if ((DefaultSteeringLock != SteeringLock) || (DefaultSuspensionHeight != SuspensionHeight))
+                    return true;
                 return false;
             }
         }
@@ -60,9 +74,13 @@ namespace Vstancer.Client
             DefaultOffsetX = new float[] { 0, 0, 0, 0 };
             RotationY = new float[] { 0, 0, 0, 0 };
             OffsetX = new float[] { 0, 0, 0, 0 };
+            SteeringLock = 65f;
+            SuspensionHeight = 0.0f;
+            DefaultSteeringLock = 65f;
+            DefaultSuspensionHeight = 0.0f;
         }
 
-        public VStancerPreset(int count, float[] defRot, float[] defOff)
+        public VStancerPreset(int count, float[] defRot, float[] defOff, float defSteerLock, float defSuspHeight)
         {
             WheelsCount = count;
             FrontWheelsCount = CalculateFrontWheelsCount(WheelsCount);
@@ -80,9 +98,13 @@ namespace Vstancer.Client
                 RotationY[index] = DefaultRotationY[index];
                 OffsetX[index] = DefaultOffsetX[index];
             }
+            DefaultSteeringLock = defSteerLock;
+            SteeringLock = DefaultSteeringLock;
+            DefaultSuspensionHeight = defSuspHeight;
+            SuspensionHeight = DefaultSuspensionHeight;
         }
 
-        public VStancerPreset(int count, float frontOffset, float frontRotation, float rearOffset, float rearRotation, float defaultFrontOffset, float defaultFrontRotation, float defaultRearOffset, float defaultRearRotation)
+        public VStancerPreset(int count, float frontOffset, float frontRotation, float rearOffset, float rearRotation, float steeringLock, float suspensionHeight, float defaultFrontOffset, float defaultFrontRotation, float defaultRearOffset, float defaultRearRotation, float defaultSteeringLock, float defaultSuspensionHeight)
         {
             WheelsCount = count;
 
@@ -128,6 +150,10 @@ namespace Vstancer.Client
                     OffsetX[index] = -rearOffset;
                 }
             }
+            SteeringLock = steeringLock;
+            SuspensionHeight = suspensionHeight;
+            DefaultSteeringLock = defaultSteeringLock;
+            DefaultSuspensionHeight = defaultSuspensionHeight;
         }
 
         public void Reset()
@@ -137,6 +163,8 @@ namespace Vstancer.Client
                 RotationY[index] = DefaultRotationY[index];
                 OffsetX[index] = DefaultOffsetX[index];
             }
+            SteeringLock = DefaultSteeringLock;
+            SuspensionHeight = DefaultSuspensionHeight;
         }
 
         public bool Equals(VStancerPreset other)
@@ -199,7 +227,7 @@ namespace Vstancer.Client
 
         /// <summary>
         /// Returns the preset as an array of floats containing in order: 
-        /// frontOffset, frontRotation, rearOffset, rearRotation, defaultFrontOffset, defaultFrontRotation, defaultRearOffset, defaultRearRotation
+        /// frontOffset, frontRotation, rearOffset, rearRotation, steeringLock, suspensionHeight, defaultFrontOffset, defaultFrontRotation, defaultRearOffset, defaultRearRotation, defaltSteeringLock, defaultSuspensionHeight
         /// </summary>
         /// <returns>The float array</returns>
         public float[] ToArray()
@@ -209,10 +237,14 @@ namespace Vstancer.Client
                 RotationY[0],
                 OffsetX[FrontWheelsCount],
                 RotationY[FrontWheelsCount],
+                SteeringLock,
+                SuspensionHeight,
                 DefaultOffsetX[0],
                 DefaultRotationY[0],
                 DefaultOffsetX[FrontWheelsCount],
                 DefaultRotationY[FrontWheelsCount],
+                DefaultSteeringLock,
+                DefaultSuspensionHeight,
             };
         }
     }

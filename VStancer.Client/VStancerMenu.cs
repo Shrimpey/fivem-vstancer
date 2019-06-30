@@ -56,11 +56,16 @@ namespace Vstancer.Client
         private string FrontRotationID => VStancerEditor.FrontRotationID;
         private string RearOffsetID => VStancerEditor.RearOffsetID;
         private string RearRotationID => VStancerEditor.RearRotationID;
+        private string SteeringLockID => VStancerEditor.SteeringLockID;
+        private string SuspensionHeightID => VStancerEditor.SuspensionHeightID;
         private string ScriptName => VStancerEditor.ScriptName;
         private float frontMaxOffset => vstancerEditor.frontMaxOffset;
         private float frontMaxCamber => vstancerEditor.frontMaxCamber;
         private float rearMaxOffset => vstancerEditor.rearMaxOffset;
         private float rearMaxCamber => vstancerEditor.rearMaxCamber;
+        private float steeringLockMinVal => vstancerEditor.steeringLockMinVal;
+        private float steeringLockMaxVal => vstancerEditor.steeringLockMaxVal;
+        private float suspensionHeightMaxVal => vstancerEditor.suspensionHeightMaxVal;
         private bool CurrentPresetIsValid => vstancerEditor.CurrentPresetIsValid;
         private VStancerPreset currentPreset => vstancerEditor.currentPreset;
         private int toggleMenu => vstancerEditor.toggleMenu;
@@ -78,7 +83,7 @@ namespace Vstancer.Client
         /// <param name="minimum">The min allowed value</param>
         /// <param name="maximum">The max allowed value</param>
         /// <returns>The <see cref="MenuDynamicListItem.ChangeItemCallback"/></returns>
-        private MenuDynamicListItem.ChangeItemCallback FloatChangeCallback(string name, float value, float minimum, float maximum)
+        private MenuDynamicListItem.ChangeItemCallback FloatChangeCallback(string name, float value, float minimum, float maximum, float step)
         {
             string callback(MenuDynamicListItem sender, bool left)
             {
@@ -88,9 +93,9 @@ namespace Vstancer.Client
                 var newvalue = value;
 
                 if (left)
-                    newvalue -= FloatStep;
+                    newvalue -= step;
                 else if (!left)
-                    newvalue += FloatStep;
+                    newvalue += step;
                 else return value.ToString("F3");
 
                 // Hotfix to trim the value to 3 digits
@@ -124,7 +129,7 @@ namespace Vstancer.Client
             float min = defaultValue - maxEditing;
             float max = defaultValue + maxEditing;
 
-            var callback = FloatChangeCallback(name, value, min, max);
+            var callback = FloatChangeCallback(name, value, min, max, FloatStep);
 
             var newitem = new MenuDynamicListItem(name, value.ToString("F3"), callback) { ItemData = id };
             menu.AddMenuItem(newitem);
@@ -186,6 +191,11 @@ namespace Vstancer.Client
             AddDynamicFloatList(editorMenu, "Rear Track Width", -currentPreset.DefaultOffsetX[currentPreset.FrontWheelsCount], -currentPreset.OffsetX[currentPreset.FrontWheelsCount], rearMaxOffset, RearOffsetID);
             AddDynamicFloatList(editorMenu, "Front Camber", currentPreset.DefaultRotationY[0], currentPreset.RotationY[0], frontMaxCamber, FrontRotationID);
             AddDynamicFloatList(editorMenu, "Rear Camber", currentPreset.DefaultRotationY[currentPreset.FrontWheelsCount], currentPreset.RotationY[currentPreset.FrontWheelsCount], rearMaxCamber, RearRotationID);
+            var callback = FloatChangeCallback("Steering Lock", currentPreset.SteeringLock, steeringLockMinVal, steeringLockMaxVal, 1f);
+            var newitem = new MenuDynamicListItem("Steering Lock", currentPreset.SteeringLock.ToString("F3"), callback) { ItemData = SteeringLockID };
+            editorMenu.AddMenuItem(newitem);
+            AddDynamicFloatList(editorMenu, "Suspension Height", currentPreset.DefaultSuspensionHeight, currentPreset.SuspensionHeight, suspensionHeightMaxVal, SuspensionHeightID);
+            
             editorMenu.AddMenuItem(new MenuItem("Reset", "Restores the default values") { ItemData = ResetID });
         }
 

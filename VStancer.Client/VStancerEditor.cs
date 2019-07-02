@@ -571,7 +571,7 @@ namespace Vstancer.Client
             if (defaultSuspensionHeight != null && defaultSuspensionHeight is float)
                 susp_height_def = (float)defaultSuspensionHeight;
             else
-                susp_height_def = DecorExistOn(vehicle, DefaultSuspensionHeightID) ? DecorGetFloat(vehicle, DefaultSuspensionHeightID) : GetVehicleSuspensionHeight(vehicle);
+                susp_height_def = DecorExistOn(vehicle, DefaultSuspensionHeightID) ? DecorGetFloat(vehicle, DefaultSuspensionHeightID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise");
 
             if (vehicle == currentVehicle)
             {

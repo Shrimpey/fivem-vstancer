@@ -678,7 +678,7 @@ namespace Vstancer.Client
             float off_r_def = DecorExistOn(vehicle, DefaultRearOffsetID) ? DecorGetFloat(vehicle, DefaultRearOffsetID) : GetVehicleWheelXOffset(vehicle, frontCount);
             float rot_r_def = DecorExistOn(vehicle, DefaultRearRotationID) ? DecorGetFloat(vehicle, DefaultRearRotationID) : GetVehicleWheelYRotation(vehicle, frontCount);
             float steering_lock_def = DecorExistOn(vehicle, DefaultSteeringLockID) ? DecorGetFloat(vehicle, DefaultSteeringLockID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock");
-            float susp_height_def = DecorExistOn(vehicle, DefaultSuspensionHeightID) ? DecorGetFloat(vehicle, DefaultSuspensionHeightID) : GetVehicleSuspensionHeight(vehicle);
+            float susp_height_def = DecorExistOn(vehicle, DefaultSuspensionHeightID) ? DecorGetFloat(vehicle, DefaultSuspensionHeightID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise"); ;
 
             float off_f = DecorExistOn(vehicle, FrontOffsetID) ? DecorGetFloat(vehicle, FrontOffsetID) : off_f_def;
             float rot_f = DecorExistOn(vehicle, FrontRotationID) ? DecorGetFloat(vehicle, FrontRotationID) : rot_f_def;

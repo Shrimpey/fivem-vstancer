@@ -344,18 +344,24 @@ namespace Vstancer.Client
                 }
                 else
                 {
-                    // If current vehicle isn't a car or player isn't driving current vehicle or vehicle is dead
-                    currentPreset = null;
-                    currentVehicle = -1;
-                    Tick -= UpdateCurrentVehicle;
+                    if(CurrentPresetIsValid)
+                    {
+                        // If current vehicle isn't a car or player isn't driving current vehicle or vehicle is dead
+                        currentPreset = null;
+                        currentVehicle = -1;
+                        Tick -= UpdateCurrentVehicle;
+                    }
                 }
             }
             else
             {
-                // If player isn't in any vehicle
-                currentPreset = null;
-                currentVehicle = -1;
-                Tick -= UpdateCurrentVehicle;
+                if (CurrentPresetIsValid)
+                {
+                    // If player isn't in any vehicle
+                    currentPreset = null;
+                    currentVehicle = -1;
+                    Tick -= UpdateCurrentVehicle;
+                }
             }
 
             await Task.FromResult(0);
@@ -666,7 +672,7 @@ namespace Vstancer.Client
         /// <returns></returns>
         private VStancerPreset CreatePreset(int vehicle)
         {
-            if (IsVehicleDamaged(vehicle))
+            if (debug && IsVehicleDamaged(vehicle))
                 Screen.ShowNotification($"~o~Warning~w~: You are creating a vstancer preset for a damaged vehicle, default position and rotation of the wheels might be wrong");
 
             int wheelsCount = GetVehicleNumberOfWheels(vehicle);

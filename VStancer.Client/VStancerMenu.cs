@@ -197,7 +197,7 @@ namespace Vstancer.Client
             var newitemSL = new MenuDynamicListItem("Steering Lock", currentPreset.SteeringLock.ToString("F3"), callbackSL) { ItemData = SteeringLockID };
             editorMenu.AddMenuItem(newitemSL);
             // Suspension height, custom min max
-            var callbackSH = FloatChangeCallback("Suspension Height", currentPreset.SuspensionHeight, suspensionHeightMinVal, suspensionHeightMaxVal, FloatStep);
+            var callbackSH = FloatChangeCallback("Suspension Height", currentPreset.SuspensionHeight, suspensionHeightMinVal, suspensionHeightMaxVal, 0.005f);
             var newitemSH = new MenuDynamicListItem("Suspension Height", currentPreset.SuspensionHeight.ToString("F3"), callbackSH) { ItemData = SuspensionHeightID };
             editorMenu.AddMenuItem(newitemSH);
 

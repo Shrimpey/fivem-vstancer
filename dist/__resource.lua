@@ -9,7 +9,8 @@ files {
 }
 
 client_scripts {
-	'VStancer.Client.net.dll'
+	'VStancer.Client.net.dll',
+	'Newtonsoft.Json.dll'
 }
 
 export 'SetVstancerPreset'

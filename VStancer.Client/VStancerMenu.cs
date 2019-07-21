@@ -53,6 +53,8 @@ namespace Vstancer.Client
         #region Editor Properties
 
         private string ResetID => VStancerEditor.ResetID;
+        private string SaveID = "vstancer_save_preset";
+        private string LoadID = "vstancer_load_preset";
         private string FrontOffsetID => VStancerEditor.FrontOffsetID;
         private string FrontRotationID => VStancerEditor.FrontRotationID;
         private string RearOffsetID => VStancerEditor.RearOffsetID;
@@ -159,7 +161,53 @@ namespace Vstancer.Client
                 {
                     // If the selected item is the reset button
                     if (menuItem.ItemData as string == ResetID)
+                    {
                         MenuResetPresetButtonPressed.Invoke(this, EventArgs.Empty);
+                    }else if (menuItem.ItemData as string == SaveID)
+                    {
+                        var playerPed = PlayerPedId();
+
+                        if (IsPedInAnyVehicle(playerPed, false))
+                        {
+                            int vehicle = GetVehiclePedIsIn(playerPed, false);
+                            if (vehicle >= 0)
+                            {
+                                float[] preset = vstancerEditor.GetVstancerPreset(vehicle);
+                                if (preset.Length > 4)
+                                {
+                                    string name = GetDisplayNameFromVehicleModel((uint)GetEntityModel(vehicle));
+                                    if (SavePresetAsKVP(name, preset))
+                                    {
+                                        Debug.WriteLine($"[vStancer] Saved preset for " + name + "!\n");
+                                    }
+                                    else
+                                    {
+                                        Debug.WriteLine($"[vStancer] Failed to save preset for " + name + "!\n");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if (menuItem.ItemData as string == LoadID)
+                    {
+                        var playerPed = PlayerPedId();
+
+                        if (IsPedInAnyVehicle(playerPed, false))
+                        {
+                            int vehicle = GetVehiclePedIsIn(playerPed, false);
+                            if (vehicle >= 0)
+                            {
+                                string name = GetDisplayNameFromVehicleModel((uint)GetEntityModel(vehicle));
+                                float[] loadedPreset = LoadPresetFromKVP(name);
+                                if (loadedPreset != null)
+                                    if (loadedPreset.Length > 4)
+                                    {
+                                        vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5]);
+                                        Debug.WriteLine($"[vStancer] Loaded preset for " + name + "!\n");
+                                    }
+                            }
+                        }
+                    }
                 };
             }
 
@@ -203,65 +251,8 @@ namespace Vstancer.Client
             editorMenu.AddMenuItem(newitemSH);
 
             editorMenu.AddMenuItem(new MenuItem("Reset", "Restores the default values") { ItemData = ResetID });
-            
-            
-            MenuCheckboxItem presetSet = new MenuCheckboxItem("Save preset", "Saves preset for this vehicle", false)
-            {
-                Style = MenuCheckboxItem.CheckboxStyle.Tick
-            };
-            MenuCheckboxItem presetGet = new MenuCheckboxItem("Load preset", "Loads preset for this vehicle", false)
-            {
-                Style = MenuCheckboxItem.CheckboxStyle.Tick
-            };
-            editorMenu.AddMenuItem(presetSet);
-            editorMenu.AddMenuItem(presetGet);
-            editorMenu.OnCheckboxChange += (_menu, _item, _index, _checked) =>
-            {
-                if (_item == presetSet)
-                {
-                    var playerPed = PlayerPedId();
-
-                    if (IsPedInAnyVehicle(playerPed, false))
-                    {
-                        int vehicle = GetVehiclePedIsIn(playerPed, false);
-                        if (vehicle >= 0)
-                        {
-                            float[] preset = vstancerEditor.GetVstancerPreset(vehicle);
-                            if (preset.Length > 4)
-                            {
-                                string name = GetDisplayNameFromVehicleModel((uint)GetEntityModel(vehicle));
-                                if (SavePresetAsKVP(name, preset))
-                                {
-                                    Debug.WriteLine($"[vStancer] Saved preset for " + name + "!\n");
-                                }
-                                else
-                                {
-                                    Debug.WriteLine($"[vStancer] Failed to save preset for " + name + "!\n");
-                                }
-                            }
-                        }
-                    }
-                }else if (_item == presetGet)
-                {
-                    var playerPed = PlayerPedId();
-
-                    if (IsPedInAnyVehicle(playerPed, false))
-                    {
-                        int vehicle = GetVehiclePedIsIn(playerPed, false);
-                        if (vehicle >= 0)
-                        {
-                            string name = GetDisplayNameFromVehicleModel((uint)GetEntityModel(vehicle));
-                            float[] loadedPreset = LoadPresetFromKVP(name);
-                            if(loadedPreset != null)
-                                if (loadedPreset.Length > 4)
-                                {
-                                    vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5]);
-                                }
-                        }
-                    }
-                }
-                _checked = false;
-            };
+            editorMenu.AddMenuItem(new MenuItem("Save preset", "Saves preset for this vehicle") { ItemData = SaveID });
+            editorMenu.AddMenuItem(new MenuItem("Load preset", "Loads preset for this vehicle") { ItemData = LoadID });
         }
 
         private bool SavePresetAsKVP(string name, float[] preset)

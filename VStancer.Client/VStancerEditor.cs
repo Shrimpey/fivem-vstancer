@@ -572,7 +572,7 @@ namespace Vstancer.Client
             if (defaultSteeringLock != null && defaultSteeringLock is float)
                 steering_lock_def = (float)defaultSteeringLock;
             else
-                steering_lock_def = DecorExistOn(vehicle, DefaultSteeringLockID) ? DecorGetFloat(vehicle, DefaultSteeringLockID) : GetVehicleSteeringAngle(vehicle);
+                steering_lock_def = DecorExistOn(vehicle, DefaultSteeringLockID) ? DecorGetFloat(vehicle, DefaultSteeringLockID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock");
 
             if (defaultSuspensionHeight != null && defaultSuspensionHeight is float)
                 susp_height_def = (float)defaultSuspensionHeight;

@@ -165,48 +165,11 @@ namespace Vstancer.Client
                         MenuResetPresetButtonPressed.Invoke(this, EventArgs.Empty);
                     }else if (menuItem.ItemData as string == SaveID)
                     {
-                        var playerPed = PlayerPedId();
-
-                        if (IsPedInAnyVehicle(playerPed, false))
-                        {
-                            int vehicle = GetVehiclePedIsIn(playerPed, false);
-                            if (vehicle >= 0)
-                            {
-                                float[] preset = vstancerEditor.GetVstancerPreset(vehicle);
-                                if (preset.Length > 4)
-                                {
-                                    string name = GetDisplayNameFromVehicleModel((uint)GetEntityModel(vehicle));
-                                    if (SavePresetAsKVP(name, preset))
-                                    {
-                                        Debug.WriteLine($"[vStancer] Saved preset for " + name + "!\n");
-                                    }
-                                    else
-                                    {
-                                        Debug.WriteLine($"[vStancer] Failed to save preset for " + name + "!\n");
-                                    }
-                                }
-                            }
-                        }
+                        SavePreset();
                     }
                     else if (menuItem.ItemData as string == LoadID)
                     {
-                        var playerPed = PlayerPedId();
-
-                        if (IsPedInAnyVehicle(playerPed, false))
-                        {
-                            int vehicle = GetVehiclePedIsIn(playerPed, false);
-                            if (vehicle >= 0)
-                            {
-                                string name = GetDisplayNameFromVehicleModel((uint)GetEntityModel(vehicle));
-                                float[] loadedPreset = LoadPresetFromKVP(name);
-                                if (loadedPreset != null)
-                                    if (loadedPreset.Length > 4)
-                                    {
-                                        vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5]);
-                                        Debug.WriteLine($"[vStancer] Loaded preset for " + name + "!\n");
-                                    }
-                            }
-                        }
+                        LoadPreset();
                     }
                 };
             }
@@ -253,6 +216,57 @@ namespace Vstancer.Client
             editorMenu.AddMenuItem(new MenuItem("Reset", "Restores the default values") { ItemData = ResetID });
             editorMenu.AddMenuItem(new MenuItem("Save preset", "Saves preset for this vehicle") { ItemData = SaveID });
             editorMenu.AddMenuItem(new MenuItem("Load preset", "Loads preset for this vehicle") { ItemData = LoadID });
+        }
+
+        private void SavePreset()
+        {
+            var playerPed = PlayerPedId();
+
+            if (IsPedInAnyVehicle(playerPed, false))
+            {
+                int vehicle = GetVehiclePedIsIn(playerPed, false);
+                if (vehicle >= 0)
+                {
+                    float[] preset = vstancerEditor.GetVstancerPreset(vehicle);
+                    if (preset.Length > 4)
+                    {
+                        string name = GetDisplayNameFromVehicleModel((uint)GetEntityModel(vehicle));
+                        if (SavePresetAsKVP(name, preset))
+                        {
+                            Debug.WriteLine($"[vStancer] Saved preset for " + name + "!\n");
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"[vStancer] Failed to save preset for " + name + "!\n");
+                        }
+                    }
+                }
+            }
+        }
+
+        private async Task LoadPreset()
+        {
+            var playerPed = PlayerPedId();
+
+            // Make sure car is spawned
+            await Delay(1000);
+
+            if (IsPedInAnyVehicle(playerPed, false))
+            {
+                int vehicle = GetVehiclePedIsIn(playerPed, false);
+                if (vehicle >= 0)
+                {
+                    string name = GetDisplayNameFromVehicleModel((uint)GetEntityModel(vehicle));
+                    float[] loadedPreset = LoadPresetFromKVP(name);
+                    if (loadedPreset != null)
+                        if (loadedPreset.Length > 4)
+                        {
+                            vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5]);
+                            Debug.WriteLine($"[vStancer] Loaded preset for " + name + "!\n");
+                        }
+                }
+            }
+            await Delay(0);
         }
 
         private bool SavePresetAsKVP(string name, float[] preset)
@@ -311,6 +325,8 @@ namespace Vstancer.Client
                 editorMenu.Visible = !editorMenu.Visible;
             });
             InitializeMenu();
+            
+            Exports.Add("LoadVStancerPreset", new Func<Task>(LoadPreset));
 
             Tick += OnTick;
         }

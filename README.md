@@ -1,4 +1,13 @@
 # VStancer
+---
+## Fork information
+This is a custom version of vStancer. It provides following additional functionality:
+* suspension height
+* steering lock
+* visual wheel size
+* visual wheel width
+* preset saving and loading
+---
 |Master|Development|
 |:-:|:-:|
 |[![Build status](https://ci.appveyor.com/api/projects/status/qialhqew9j0i9528/branch/master?svg=true)](https://ci.appveyor.com/project/carmineos/fivem-vstancer/branch/master) |[![Build status](https://ci.appveyor.com/api/projects/status/qialhqew9j0i9528/branch/development?svg=true)](https://ci.appveyor.com/project/carmineos/fivem-vstancer/branch/development)|

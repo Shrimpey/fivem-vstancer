@@ -53,6 +53,11 @@ namespace Vstancer.Client
         /// </summary>
         private IEnumerable<int> vehicles;
 
+        /// <summary>
+        /// Additional Action delegate to support 17 parameter action (generic C# delegates only support up to 16 args) 
+        /// </summary>
+        public delegate void Action<in T0, in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16>
+                                    (T0 P0, T1 P1, T2 P2, T3 P3, T4 P4, T5 P5, T6 P6, T7 P7, T8 P8, T9 P9, T10 P10, T11 P11, T12 P12, T13 P13, T14 P14, T15 P15, T16 P16);
         #endregion
 
         #region Config Fields
@@ -64,11 +69,16 @@ namespace Vstancer.Client
         public float frontMaxCamber = 0.20f;
         public float rearMaxOffset = 0.25f;
         public float rearMaxCamber = 0.20f;
-        // Added additional config fields
+        // Steering lock and suspension height
         public float steeringLockMinVal = 30f;
         public float steeringLockMaxVal = 90f;
         public float suspensionHeightMinVal = -0.1f;
         public float suspensionHeightMaxVal = 0.1f;
+        // Wheel size and width
+        public float wheelSizeMinVal = 0.1f;
+        public float wheelSizeMaxVal = 2.0f;
+        public float wheelWidthMinVal = 0.1f;
+        public float wheelWidthMaxVal = 2.0f;
 
         private float FloatPrecision = 0.001f;
         private long timer = 1000;
@@ -86,6 +96,8 @@ namespace Vstancer.Client
         public const string RearRotationID = "vstancer_rot_r";
         public const string SteeringLockID = "vstancer_steer_lock";
         public const string SuspensionHeightID = "vstancer_susp_height";
+        public const string WheelSizeID = "vstancer_wheel_size";
+        public const string WheelWidthID = "vstancer_wheel_width";
 
         public const string DefaultFrontOffsetID = "vstancer_off_f_def";
         public const string DefaultFrontRotationID = "vstancer_rot_f_def";
@@ -93,6 +105,8 @@ namespace Vstancer.Client
         public const string DefaultRearRotationID = "vstancer_rot_r_def";
         public const string DefaultSteeringLockID = "vstancer_steer_lock_def";
         public const string DefaultSuspensionHeightID = "vstancer_susp_height_def";
+        public const string DefaultWheelSizeID = "vstancer_wheel_size_def";
+        public const string DefaultWheelWidthID = "vstancer_wheel_width_def";
 
         public const string ResetID = "vstancer_reset";
 
@@ -185,7 +199,14 @@ namespace Vstancer.Client
             else if (id == SuspensionHeightID) {
                 currentPreset.SetSuspensionHeight(value);
                 defaultValue = currentPreset.DefaultSuspensionHeight;
-                //SetVehicleFixed(currentVehicle);
+            }
+            else if (id == WheelSizeID) {
+                currentPreset.SetWheelSize(value);
+                defaultValue = currentPreset.DefaultWheelSize;
+            }
+            else if (id == WheelWidthID) {
+                currentPreset.SetWheelWidth(value);
+                defaultValue = currentPreset.DefaultWheelWidth;
             }
 
             // Force one single refresh to update rendering at correct position after reset
@@ -293,9 +314,10 @@ namespace Vstancer.Client
                     ToggleMenuVisibility?.Invoke(this, EventArgs.Empty);
                 }));
             }
-
-
-            Exports.Add("SetVstancerPreset", new Action<int, float, float, float, float, float, float, object, object, object, object, object, object>(SetVstancerPreset));
+            
+            Exports.Add("SetVstancerPreset", new Action<    int,
+                                                            float, float, float, float, float, float, float, float,
+                                                            object, object, object, object, object, object, object, object>(SetVstancerPreset));
             Exports.Add("GetVstancerPreset", new Func<int, float[]>(GetVstancerPreset));
 
             // Create a script for the menu ...
@@ -463,6 +485,11 @@ namespace Vstancer.Client
             DecorRegister(DefaultSteeringLockID, 1);
             DecorRegister(SuspensionHeightID, 1);
             DecorRegister(DefaultSuspensionHeightID, 1);
+
+            DecorRegister(WheelSizeID, 1);
+            DecorRegister(DefaultWheelSizeID, 1);
+            DecorRegister(WheelWidthID, 1);
+            DecorRegister(DefaultWheelWidthID, 1);
         }
 
         /// <summary>
@@ -506,6 +533,18 @@ namespace Vstancer.Client
 
             if (DecorExistOn(vehicle, DefaultSuspensionHeightID))
                 DecorRemove(vehicle, DefaultSuspensionHeightID);
+
+            if (DecorExistOn(vehicle, WheelSizeID))
+                DecorRemove(vehicle, WheelSizeID);
+
+            if (DecorExistOn(vehicle, DefaultWheelSizeID))
+                DecorRemove(vehicle, DefaultWheelSizeID);
+
+            if (DecorExistOn(vehicle, WheelWidthID))
+                DecorRemove(vehicle, WheelWidthID);
+
+            if (DecorExistOn(vehicle, DefaultWheelWidthID))
+                DecorRemove(vehicle, DefaultWheelWidthID);
         }
 
         /// <summary>
@@ -530,16 +569,20 @@ namespace Vstancer.Client
         /// <param name="rearRotation">The rear rotation value</param>
         /// <param name="steeringLock">Steering lock value</param>
         /// <param name="suspensionHeight">Suspension height value</param>
+        /// <param name="wheelSize">The wheel size value</param>
+        /// <param name="wheelWidth">The wheel width value</param>
         /// <param name="defaultFrontOffset">The default front offset value</param>
         /// <param name="defaultFrontRotation">The default front rotation value</param>
         /// <param name="defaultRearOffset">The default rear offset value</param>
         /// <param name="defaultRearRotation">The default rear rotation value</param>
         /// <param name="defaultSteeringLock">The default steering lock value</param>
         /// <param name="defaultSuspensionHeight">The default suspension height value</param>
-        public void SetVstancerPreset(int vehicle, float frontOffset, float frontRotation, float rearOffset, float rearRotation, float steeringLock, float suspensionHeight, object defaultFrontOffset = null, object defaultFrontRotation = null, object defaultRearOffset = null, object defaultRearRotation = null, object defaultSteeringLock = null, object defaultSuspensionHeight = null)
+        /// <param name="defaultWheelSize">The default wheel size value</param>
+        /// <param name="defaultWheelWidth">The default wheel size value</param>
+        public void SetVstancerPreset(int vehicle, float frontOffset, float frontRotation, float rearOffset, float rearRotation, float steeringLock, float suspensionHeight, float wheelSize, float wheelWidth, object defaultFrontOffset = null, object defaultFrontRotation = null, object defaultRearOffset = null, object defaultRearRotation = null, object defaultSteeringLock = null, object defaultSuspensionHeight = null, object defaultWheelSize = null, object defaultWheelWidth = null)
         {
             if (debug)
-                Debug.WriteLine($"{ScriptName}: SetVstancerPreset parameters {frontOffset} {frontRotation} {rearOffset} {rearRotation} {steeringLock} {suspensionHeight} {defaultFrontOffset} {defaultFrontRotation} {defaultRearOffset} {defaultRearRotation} {defaultSteeringLock} {defaultSuspensionHeight}");
+                Debug.WriteLine($"{ScriptName}: SetVstancerPreset parameters {frontOffset} {frontRotation} {rearOffset} {rearRotation} {steeringLock} {suspensionHeight} {wheelSize} {wheelWidth} {defaultFrontOffset} {defaultFrontRotation} {defaultRearOffset} {defaultRearRotation} {defaultSteeringLock} {defaultSuspensionHeight} {defaultWheelSize} {defaultWheelWidth}");
 
             if (!DoesEntityExist(vehicle))
                 return;
@@ -547,7 +590,7 @@ namespace Vstancer.Client
             int wheelsCount = GetVehicleNumberOfWheels(vehicle);
             int frontCount = VStancerPreset.CalculateFrontWheelsCount(wheelsCount);
 
-            float off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def;
+            float off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def, wheel_size_def, wheel_width_def;
 
             if (defaultFrontOffset != null && defaultFrontOffset is float)
                 off_f_def = (float)defaultFrontOffset;
@@ -579,9 +622,21 @@ namespace Vstancer.Client
             else
                 susp_height_def = DecorExistOn(vehicle, DefaultSuspensionHeightID) ? DecorGetFloat(vehicle, DefaultSuspensionHeightID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise");
 
+            if (defaultWheelSize != null && defaultWheelSize is float) {
+                wheel_size_def = (float)defaultWheelSize;
+            } else {
+                wheel_size_def = DecorExistOn(vehicle, DefaultWheelSizeID) ? DecorGetFloat(vehicle, DefaultWheelSizeID) : GetVehicleWheelSize(vehicle);
+            }
+
+            if (defaultWheelWidth != null && defaultWheelWidth is float) {
+                wheel_width_def = (float)defaultWheelWidth;
+            } else {
+                wheel_width_def = DecorExistOn(vehicle, DefaultWheelWidthID) ? DecorGetFloat(vehicle, DefaultWheelWidthID) : GetVehicleWheelWidth(vehicle);
+            }
+
             if (vehicle == currentVehicle)
             {
-                currentPreset = new VStancerPreset(wheelsCount, frontOffset, frontRotation, rearOffset, rearRotation, steeringLock, suspensionHeight, off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def);
+                currentPreset = new VStancerPreset(wheelsCount, frontOffset, frontRotation, rearOffset, rearRotation, steeringLock, suspensionHeight, wheelSize, wheelWidth, off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def, wheel_size_def, wheel_width_def);
                 PresetChanged?.Invoke(this, EventArgs.Empty);
             }
             else
@@ -592,6 +647,8 @@ namespace Vstancer.Client
                 UpdateFloatDecorator(vehicle, DefaultRearRotationID, rot_r_def, rearRotation);
                 UpdateFloatDecorator(vehicle, DefaultSteeringLockID, steering_lock_def, steeringLock);
                 UpdateFloatDecorator(vehicle, DefaultSuspensionHeightID, susp_height_def, suspensionHeight);
+                UpdateFloatDecorator(vehicle, DefaultWheelSizeID, wheel_size_def, wheelSize);
+                UpdateFloatDecorator(vehicle, DefaultWheelWidthID, wheel_width_def, wheelWidth);
 
                 UpdateFloatDecorator(vehicle, FrontOffsetID, frontOffset, off_f_def);
                 UpdateFloatDecorator(vehicle, FrontRotationID, frontRotation, rot_f_def);
@@ -599,6 +656,8 @@ namespace Vstancer.Client
                 UpdateFloatDecorator(vehicle, RearRotationID, rearRotation, rot_r_def);
                 UpdateFloatDecorator(vehicle, SteeringLockID, steeringLock, steering_lock_def);
                 UpdateFloatDecorator(vehicle, SuspensionHeightID, suspensionHeight, susp_height_def);
+                UpdateFloatDecorator(vehicle, WheelSizeID, wheelSize, wheel_size_def);
+                UpdateFloatDecorator(vehicle, WheelWidthID, wheelWidth, wheel_width_def);
             }
         }
 
@@ -648,6 +707,10 @@ namespace Vstancer.Client
             float DefaultSteeringLock = preset.DefaultSteeringLock;
             float SuspensionHeight = preset.SuspensionHeight;
             float DefaultSuspensionHeight = preset.DefaultSuspensionHeight;
+            float WheelSize = preset.WheelSize;
+            float DefaultWheelSize = preset.DefaultWheelSize;
+            float WheelWidth = preset.WheelWidth;
+            float DefaultWheelWidth = preset.DefaultWheelWidth;
             int frontCount = preset.FrontWheelsCount;
 
             UpdateFloatDecorator(vehicle, DefaultFrontOffsetID, DefaultOffsetX[0], OffsetX[0]);
@@ -656,6 +719,8 @@ namespace Vstancer.Client
             UpdateFloatDecorator(vehicle, DefaultRearRotationID, DefaultRotationY[frontCount], RotationY[frontCount]);
             UpdateFloatDecorator(vehicle, DefaultSteeringLockID, DefaultSteeringLock, SteeringLock);
             UpdateFloatDecorator(vehicle, DefaultSuspensionHeightID, DefaultSuspensionHeight, SuspensionHeight);
+            UpdateFloatDecorator(vehicle, DefaultWheelSizeID, DefaultWheelSize, WheelSize);
+            UpdateFloatDecorator(vehicle, DefaultWheelWidthID, DefaultWheelWidth, WheelWidth);
 
             UpdateFloatDecorator(vehicle, FrontOffsetID, OffsetX[0], DefaultOffsetX[0]);
             UpdateFloatDecorator(vehicle, FrontRotationID, RotationY[0], DefaultRotationY[0]);
@@ -663,6 +728,8 @@ namespace Vstancer.Client
             UpdateFloatDecorator(vehicle, RearRotationID, RotationY[frontCount], DefaultRotationY[frontCount]);
             UpdateFloatDecorator(vehicle, SteeringLockID, SteeringLock, DefaultSteeringLock);
             UpdateFloatDecorator(vehicle, SuspensionHeightID, SuspensionHeight, DefaultSuspensionHeight);
+            UpdateFloatDecorator(vehicle, DefaultWheelSizeID, WheelSize, DefaultWheelSize);
+            UpdateFloatDecorator(vehicle, DefaultWheelWidthID, WheelWidth, DefaultWheelWidth);
         }
 
         /// <summary>
@@ -684,7 +751,9 @@ namespace Vstancer.Client
             float off_r_def = DecorExistOn(vehicle, DefaultRearOffsetID) ? DecorGetFloat(vehicle, DefaultRearOffsetID) : GetVehicleWheelXOffset(vehicle, frontCount);
             float rot_r_def = DecorExistOn(vehicle, DefaultRearRotationID) ? DecorGetFloat(vehicle, DefaultRearRotationID) : GetVehicleWheelYRotation(vehicle, frontCount);
             float steering_lock_def = DecorExistOn(vehicle, DefaultSteeringLockID) ? DecorGetFloat(vehicle, DefaultSteeringLockID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock");
-            float susp_height_def = DecorExistOn(vehicle, DefaultSuspensionHeightID) ? DecorGetFloat(vehicle, DefaultSuspensionHeightID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise"); ;
+            float susp_height_def = DecorExistOn(vehicle, DefaultSuspensionHeightID) ? DecorGetFloat(vehicle, DefaultSuspensionHeightID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise");
+            float wheel_size_def = DecorExistOn(vehicle, DefaultWheelSizeID) ? DecorGetFloat(vehicle, DefaultWheelSizeID) : GetVehicleWheelSize(vehicle);
+            float wheel_width_def = DecorExistOn(vehicle, DefaultWheelWidthID) ? DecorGetFloat(vehicle, DefaultWheelWidthID) : GetVehicleWheelWidth(vehicle);
 
             float off_f = DecorExistOn(vehicle, FrontOffsetID) ? DecorGetFloat(vehicle, FrontOffsetID) : off_f_def;
             float rot_f = DecorExistOn(vehicle, FrontRotationID) ? DecorGetFloat(vehicle, FrontRotationID) : rot_f_def;
@@ -692,8 +761,10 @@ namespace Vstancer.Client
             float rot_r = DecorExistOn(vehicle, RearRotationID) ? DecorGetFloat(vehicle, RearRotationID) : rot_r_def;
             float steering_lock = DecorExistOn(vehicle, SteeringLockID) ? DecorGetFloat(vehicle, SteeringLockID) : steering_lock_def;
             float susp_height = DecorExistOn(vehicle, SuspensionHeightID) ? DecorGetFloat(vehicle, SuspensionHeightID) : susp_height_def;
+            float wheel_size = DecorExistOn(vehicle, WheelSizeID) ? DecorGetFloat(vehicle, WheelSizeID) : wheel_size_def;
+            float wheel_width = DecorExistOn(vehicle, WheelWidthID) ? DecorGetFloat(vehicle, WheelWidthID) : wheel_width_def;
 
-            return new VStancerPreset(wheelsCount, off_f, rot_f, off_r, rot_r, steering_lock, susp_height, off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def);
+            return new VStancerPreset(wheelsCount, off_f, rot_f, off_r, rot_r, steering_lock, susp_height, wheel_size, wheel_width, off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def, wheel_size_def, wheel_width_def);
         }
 
         /// <summary>
@@ -712,6 +783,9 @@ namespace Vstancer.Client
             }
             SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock", preset.SteeringLock);
             SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise", preset.SuspensionHeight);
+
+            SetVehicleWheelSize(vehicle, preset.WheelSize);
+            SetVehicleWheelWidth(vehicle, preset.WheelWidth);
         }
 
         /// <summary>
@@ -784,6 +858,16 @@ namespace Vstancer.Client
                 float value = DecorGetFloat(vehicle, SuspensionHeightID);
                 SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise", value);
             }
+
+            if (DecorExistOn(vehicle, WheelSizeID)) {
+                float value = DecorGetFloat(vehicle, WheelSizeID);
+                SetVehicleWheelSize(vehicle, value);
+            }
+
+            if (DecorExistOn(vehicle, WheelWidthID)) {
+                float value = DecorGetFloat(vehicle, WheelWidthID);
+                SetVehicleWheelWidth(vehicle, value);
+            }
         }
 
         /// <summary>
@@ -837,6 +921,16 @@ namespace Vstancer.Client
                 s.AppendLine($"{SuspensionHeightID}: {value}");
             }
 
+            if (DecorExistOn(vehicle, WheelSizeID)) {
+                float value = DecorGetFloat(vehicle, WheelSizeID);
+                s.AppendLine($"{WheelSizeID}: {value}");
+            }
+
+            if (DecorExistOn(vehicle, WheelWidthID)) {
+                float value = DecorGetFloat(vehicle, WheelWidthID);
+                s.AppendLine($"{WheelWidthID}: {value}");
+            }
+
             Debug.WriteLine(s.ToString());
         }
 
@@ -868,12 +962,16 @@ namespace Vstancer.Client
                 DecorExistOn(entity, RearRotationID) ||
                 DecorExistOn(entity, SteeringLockID) ||
                 DecorExistOn(entity, SuspensionHeightID) ||
+                DecorExistOn(entity, WheelWidthID) ||
+                DecorExistOn(entity, WheelSizeID) ||
                 DecorExistOn(entity, DefaultFrontOffsetID) ||
                 DecorExistOn(entity, DefaultFrontRotationID) ||
                 DecorExistOn(entity, DefaultRearOffsetID) ||
                 DecorExistOn(entity, DefaultRearRotationID) ||
                 DecorExistOn(entity, DefaultSteeringLockID) ||
-                DecorExistOn(entity, DefaultSuspensionHeightID)
+                DecorExistOn(entity, DefaultSuspensionHeightID) ||
+                DecorExistOn(entity, DefaultWheelSizeID) ||
+                DecorExistOn(entity, DefaultWheelWidthID)
                 );
         }
 
@@ -910,12 +1008,16 @@ namespace Vstancer.Client
                 steeringLockMaxVal = config.GetFloatValue("steeringLockMaxVal", steeringLockMaxVal);
                 suspensionHeightMinVal = config.GetFloatValue("suspensionHeightMinVal", suspensionHeightMinVal);
                 suspensionHeightMaxVal = config.GetFloatValue("suspensionHeightMaxVal", suspensionHeightMaxVal);
+                wheelSizeMinVal = config.GetFloatValue("wheelSizeMinVal", wheelSizeMinVal);
+                wheelSizeMaxVal = config.GetFloatValue("wheelSizeMaxVal", wheelSizeMaxVal);
+                wheelWidthMinVal = config.GetFloatValue("wheelWidthMinVal", wheelWidthMinVal);
+                wheelWidthMaxVal = config.GetFloatValue("wheelWidthMaxVal", wheelWidthMaxVal);
                 timer = config.GetLongValue("timer", timer);
                 debug = config.GetBoolValue("debug", debug);
                 exposeCommand = config.GetBoolValue("exposeCommand", exposeCommand);
                 exposeEvent = config.GetBoolValue("exposeEvent", exposeEvent);
 
-                Debug.WriteLine($"{ScriptName}: Settings {nameof(frontMaxOffset)}={frontMaxOffset} {nameof(frontMaxCamber)}={frontMaxCamber} {nameof(rearMaxOffset)}={rearMaxOffset} {nameof(rearMaxCamber)}={rearMaxCamber} {nameof(steeringLockMinVal)}={steeringLockMinVal} {nameof(steeringLockMaxVal)}={steeringLockMaxVal} {nameof(suspensionHeightMinVal)}={suspensionHeightMinVal} {nameof(suspensionHeightMaxVal)}={suspensionHeightMaxVal} {nameof(timer)}={timer} {nameof(debug)}={debug} {nameof(ScriptRange)}={ScriptRange}");
+                Debug.WriteLine($"{ScriptName}: Settings {nameof(frontMaxOffset)}={frontMaxOffset} {nameof(frontMaxCamber)}={frontMaxCamber} {nameof(rearMaxOffset)}={rearMaxOffset} {nameof(rearMaxCamber)}={rearMaxCamber} {nameof(steeringLockMinVal)}={steeringLockMinVal} {nameof(steeringLockMaxVal)}={steeringLockMaxVal} {nameof(suspensionHeightMinVal)}={suspensionHeightMinVal} {nameof(suspensionHeightMaxVal)}={suspensionHeightMaxVal} {nameof(wheelSizeMinVal)}={wheelSizeMinVal} {nameof(wheelSizeMaxVal)}={wheelSizeMaxVal} {nameof(wheelWidthMinVal)}={wheelWidthMinVal} {nameof(wheelWidthMaxVal)}={wheelWidthMaxVal} {nameof(timer)}={timer} {nameof(debug)}={debug} {nameof(ScriptRange)}={ScriptRange}");
             }
         }
 

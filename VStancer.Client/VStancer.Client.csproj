@@ -20,32 +20,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CitizenFX.Core.Client">
-      <Version>1.0.1208</Version>
-      <ExcludeAssets>runtime</ExcludeAssets>
-      <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="CitizenFX.Core.Client" Version="1.0.2064" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\vendor\MenuAPI\MenuAPI\MenuAPI.csproj">
-      <Project>{9c746601-9f3d-4b0d-877c-1c7bc493c5bc}</Project>
-      <Name>MenuAPI</Name>
-    </ProjectReference>
-  </ItemGroup>
-
-  <ItemGroup>
+    <Reference Include="MenuAPI">
+      <HintPath>..\dist\MenuAPI.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="
-          if '$(CI)' == '' ( 
-          call &quot;$(SolutionDir)postbuild.bat&quot; &quot;$(TargetPath)&quot;
-          call &quot;$(SolutionDir)postbuild.bat&quot; &quot;$(SolutionDir)\dist\config.ini&quot;
-          call &quot;$(SolutionDir)postbuild.bat&quot; &quot;$(SolutionDir)\dist\__resource.lua&quot;
-          call &quot;$(SolutionDir)postbuild.bat&quot; &quot;$(TargetDir)\MenuAPI.dll&quot;)
-          " />
+    <Exec Command="&#xD;&#xA;call &quot;$(SolutionDir)postbuild.bat&quot; &quot;$(TargetPath)&quot;&#xD;&#xA;call &quot;$(SolutionDir)postbuild.bat&quot; &quot;$(SolutionDir)\dist\config.ini&quot;&#xD;&#xA;call &quot;$(SolutionDir)postbuild.bat&quot; &quot;$(SolutionDir)\dist\__resource.lua&quot;&#xD;&#xA;call &quot;$(SolutionDir)postbuild.bat&quot; &quot;$(SolutionDir)\dist\MenuAPI.dll&quot;&#xD;&#xA;call &quot;$(SolutionDir)postbuild.bat&quot; &quot;$(SolutionDir)\VStancer.Client\Newtonsoft.Json.dll&quot;&#xD;&#xA;" />
   </Target>
 
 </Project>

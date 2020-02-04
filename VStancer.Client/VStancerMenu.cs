@@ -6,10 +6,8 @@ using CitizenFX.Core.UI;
 using static CitizenFX.Core.Native.API;
 using Newtonsoft.Json;
 
-namespace Vstancer.Client
-{
-    internal class VStancerMenu : BaseScript
-    {
+namespace Vstancer.Client {
+    internal class VStancerMenu : BaseScript {
         #region Private Fields
 
         /// <summary>
@@ -61,6 +59,8 @@ namespace Vstancer.Client
         private string RearRotationID => VStancerEditor.RearRotationID;
         private string SteeringLockID => VStancerEditor.SteeringLockID;
         private string SuspensionHeightID => VStancerEditor.SuspensionHeightID;
+        private string WheelSizeID => VStancerEditor.WheelSizeID;
+        private string WheelWidthID => VStancerEditor.WheelWidthID;
         private string ScriptName => VStancerEditor.ScriptName;
         private float frontMaxOffset => vstancerEditor.frontMaxOffset;
         private float frontMaxCamber => vstancerEditor.frontMaxCamber;
@@ -70,6 +70,10 @@ namespace Vstancer.Client
         private float steeringLockMaxVal => vstancerEditor.steeringLockMaxVal;
         private float suspensionHeightMinVal => vstancerEditor.suspensionHeightMinVal;
         private float suspensionHeightMaxVal => vstancerEditor.suspensionHeightMaxVal;
+        private float wheelSizeMinVal => vstancerEditor.wheelSizeMinVal;
+        private float wheelSizeMaxVal => vstancerEditor.wheelSizeMaxVal;
+        private float wheelWidthMinVal => vstancerEditor.wheelWidthMinVal;
+        private float wheelWidthMaxVal => vstancerEditor.wheelWidthMaxVal;
         private bool CurrentPresetIsValid => vstancerEditor.CurrentPresetIsValid;
         private VStancerPreset currentPreset => vstancerEditor.currentPreset;
         private int toggleMenu => vstancerEditor.toggleMenu;
@@ -87,10 +91,8 @@ namespace Vstancer.Client
         /// <param name="minimum">The min allowed value</param>
         /// <param name="maximum">The max allowed value</param>
         /// <returns>The <see cref="MenuDynamicListItem.ChangeItemCallback"/></returns>
-        private MenuDynamicListItem.ChangeItemCallback FloatChangeCallback(string name, float value, float minimum, float maximum, float step)
-        {
-            string callback(MenuDynamicListItem sender, bool left)
-            {
+        private MenuDynamicListItem.ChangeItemCallback FloatChangeCallback(string name, float value, float minimum, float maximum, float step) {
+            string callback(MenuDynamicListItem sender, bool left) {
                 var min = minimum;
                 var max = maximum;
 
@@ -109,8 +111,7 @@ namespace Vstancer.Client
                     Screen.ShowNotification($"~o~Warning~w~: Min ~b~{name}~w~ value allowed is {min} for this vehicle");
                 else if (newvalue > max)
                     Screen.ShowNotification($"~o~Warning~w~: Max ~b~{name}~w~ value allowed is {max} for this vehicle");
-                else
-                {
+                else {
                     value = newvalue;
                 }
                 return value.ToString("F3");
@@ -128,8 +129,7 @@ namespace Vstancer.Client
         /// <param name="maxEditing">The max delta allowed relative to the default value</param>
         /// <param name="id">The ID of the property linked to the controller</param>
         /// <returns></returns>
-        private MenuDynamicListItem AddDynamicFloatList(Menu menu, string name, float defaultValue, float value, float maxEditing, string id)
-        {
+        private MenuDynamicListItem AddDynamicFloatList(Menu menu, string name, float defaultValue, float value, float maxEditing, string id) {
             float min = defaultValue - maxEditing;
             float max = defaultValue + maxEditing;
 
@@ -143,32 +143,29 @@ namespace Vstancer.Client
         /// <summary>
         /// Setup the menu
         /// </summary>
-        private void InitializeMenu()
-        {
-            if (editorMenu == null)
-            {
+        private void InitializeMenu() {
+            if (editorMenu == null) {
                 editorMenu = new Menu(ScriptName, "Editor");
 
                 // When the value of a MenuDynamicListItem is changed
-                editorMenu.OnDynamicListItemCurrentItemChange += (menu, dynamicListItem, oldValue, newValue) =>
-                {
+                editorMenu.OnDynamicListItemCurrentItemChange += (menu, dynamicListItem, oldValue, newValue) => {
                     string id = dynamicListItem.ItemData as string;
                     MenuPresetValueChanged?.Invoke(id, newValue);
                 };
 
+                editorMenu.OnMenuOpen += (menu) => {
+                    UpdateWheelValues();
+                    UpdateEditorMenu((currentPreset.WheelSize==0.0f), (currentPreset.WheelWidth == 0.0f));
+                };
+
                 // When a MenuItem is selected
-                editorMenu.OnItemSelect += (menu, menuItem, itemIndex) =>
-                {
+                editorMenu.OnItemSelect += (menu, menuItem, itemIndex) => {
                     // If the selected item is the reset button
-                    if (menuItem.ItemData as string == ResetID)
-                    {
+                    if (menuItem.ItemData as string == ResetID) {
                         MenuResetPresetButtonPressed.Invoke(this, EventArgs.Empty);
-                    }else if (menuItem.ItemData as string == SaveID)
-                    {
+                    } else if (menuItem.ItemData as string == SaveID) {
                         SavePreset();
-                    }
-                    else if (menuItem.ItemData as string == LoadID)
-                    {
+                    } else if (menuItem.ItemData as string == LoadID) {
                         LoadPreset();
                     }
                 };
@@ -176,8 +173,7 @@ namespace Vstancer.Client
 
             UpdateEditorMenu();
 
-            if (menuController == null)
-            {
+            if (menuController == null) {
                 menuController = new MenuController();
                 MenuController.AddMenu(editorMenu);
                 MenuController.MenuAlignment = MenuController.MenuAlignmentOption.Right;
@@ -190,8 +186,7 @@ namespace Vstancer.Client
         /// <summary>
         /// Update the items of the main menu
         /// </summary>
-        private void UpdateEditorMenu()
-        {
+        private void UpdateEditorMenu(bool hideWheelSize = false, bool hideWheelWidth = false) {
             if (editorMenu == null)
                 return;
 
@@ -212,10 +207,43 @@ namespace Vstancer.Client
             var callbackSH = FloatChangeCallback("Suspension Height", currentPreset.SuspensionHeight, suspensionHeightMinVal, suspensionHeightMaxVal, 0.005f);
             var newitemSH = new MenuDynamicListItem("Suspension Height", currentPreset.SuspensionHeight.ToString("F3"), callbackSH) { ItemData = SuspensionHeightID };
             editorMenu.AddMenuItem(newitemSH);
+            // Wheel size, custom min max
+            var callbackWS = FloatChangeCallback("Wheel size", currentPreset.WheelSize, wheelSizeMinVal, wheelSizeMaxVal, 0.025f);
+            var newitemWS = new MenuDynamicListItem("Wheel size", currentPreset.WheelSize.ToString("F3"), callbackWS, "Only works on non-default wheels") { ItemData = WheelSizeID };
+            editorMenu.AddMenuItem(newitemWS);
+            // Wheel width, custom min max
+            var callbackWW = FloatChangeCallback("Wheel width", currentPreset.WheelWidth, wheelWidthMinVal, wheelWidthMaxVal, 0.025f);
+            var newitemWW = new MenuDynamicListItem("Wheel width", currentPreset.WheelWidth.ToString("F3"), callbackWW, "Only works on non-default wheels") { ItemData = WheelWidthID };
+            editorMenu.AddMenuItem(newitemWW);
+
+            if (hideWheelSize) {
+                newitemWS.Enabled = false;
+            } else {
+                newitemWS.Enabled = true;
+            }
+            if (hideWheelWidth) {
+                newitemWW.Enabled = false;
+            } else {
+                newitemWW.Enabled = true;
+            }
 
             editorMenu.AddMenuItem(new MenuItem("Reset", "Restores the default values") { ItemData = ResetID });
             editorMenu.AddMenuItem(new MenuItem("Save preset", "Saves preset for this vehicle") { ItemData = SaveID });
             editorMenu.AddMenuItem(new MenuItem("Load preset", "Loads preset for this vehicle") { ItemData = LoadID });
+            editorMenu.AddMenuItem(new MenuItem("Credits",  "~g~Carmineos~g~~w~ - Author of vStancer~w~\n" +
+                                                            "~y~Tom Grobbe~y~~w~ - MenuAPI used for GUI~w~\n" +
+                                                            "~y~Shrimp~y~~w~ - Additional functionality (SL, SH, wheel size/width, presets)~w~\n" + "\n"));
+        }
+
+        private void UpdateWheelValues(){
+            var playerPed = PlayerPedId();
+            if (IsPedInAnyVehicle(playerPed, false)){
+                int vehicle = GetVehiclePedIsIn(playerPed, false);
+                if (vehicle >= 0) {
+                    currentPreset.WheelSize = GetVehicleWheelSize(vehicle);
+                    currentPreset.WheelWidth = GetVehicleWheelWidth(vehicle);
+                }
+            }
         }
 
         private void SavePreset()
@@ -228,7 +256,7 @@ namespace Vstancer.Client
                 if (vehicle >= 0)
                 {
                     float[] preset = vstancerEditor.GetVstancerPreset(vehicle);
-                    if (preset.Length > 4)
+                    if (preset.Length > 6)
                     {
                         string name = GetDisplayNameFromVehicleModel((uint)GetEntityModel(vehicle));
                         if (SavePresetAsKVP(name, preset))
@@ -259,10 +287,23 @@ namespace Vstancer.Client
                     string name = GetDisplayNameFromVehicleModel((uint)GetEntityModel(vehicle));
                     float[] loadedPreset = LoadPresetFromKVP(name);
                     if (loadedPreset != null)
-                        if (loadedPreset.Length > 4)
+                        if (loadedPreset.Length > 6)
                         {
-                            vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5]);
-                            Debug.WriteLine($"[vStancer] Loaded preset for " + name + "!\n");
+                            float wheelSizeTemp = loadedPreset[6];
+                            if(wheelSizeTemp == 0.0f) {
+                                wheelSizeTemp = (wheelSizeMinVal + wheelSizeMaxVal) / 2.0f;
+                            }else if (wheelSizeTemp < 0.0f) {
+                                wheelSizeTemp *= -1.0f;
+                            }
+
+                            float wheelWidthTemp = loadedPreset[7];
+                            if (wheelWidthTemp == 0.0f) {
+                                wheelWidthTemp = (wheelWidthMinVal + wheelWidthMaxVal) / 2.0f;
+                            }else if (wheelSizeTemp < 0.0f) {
+                                wheelSizeTemp *= -1.0f;
+                            }
+                            vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5], wheelSizeTemp, wheelWidthTemp);
+                            Debug.WriteLine($"[vStancer] Loaded preset for " + name + "!");
                         }
                 }
             }
@@ -277,7 +318,7 @@ namespace Vstancer.Client
                 string json = JsonConvert.SerializeObject(preset);
 
                 // Log
-                Debug.WriteLine($"[vStancer] Saving preset for " + name + "...\n");
+                Debug.WriteLine($"[vStancer] Saving preset for " + name + "...");
 
                 // Save
                 SetResourceKvp("vStancer_PRESET_" + name, json);
@@ -293,14 +334,14 @@ namespace Vstancer.Client
 
         private float[] LoadPresetFromKVP(string name)
         {
-            Debug.WriteLine($"[vStancer] Loading preset for " + name + "...\n");
+            Debug.WriteLine($"[vStancer] Loading preset for " + name + "...");
             if (GetResourceKvpString("vStancer_PRESET_" + name) != null)
             {
                 return (float[])JsonConvert.DeserializeObject<float[]>(GetResourceKvpString("vStancer_PRESET_" + name));
             }
             else
             {
-                Debug.WriteLine($"[vStancer] Failed to load preset for " + name + "...\n");
+                Debug.WriteLine($"[vStancer] Failed to load preset for " + name + "...");
                 return null;
             }
         }

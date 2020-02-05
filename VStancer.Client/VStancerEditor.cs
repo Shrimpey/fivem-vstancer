@@ -834,9 +834,11 @@ namespace Vstancer.Client
             if (enableSH)
                 SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise", preset.SuspensionHeight);
             if (enableWS)
-                SetVehicleWheelSize(vehicle, preset.WheelSize);
+                if(preset.WheelSize != 0.0f)
+                    SetVehicleWheelSize(vehicle, preset.WheelSize);
             if (enableWW)
-                SetVehicleWheelWidth(vehicle, preset.WheelWidth);
+                if (preset.WheelWidth != 0.0f)
+                    SetVehicleWheelWidth(vehicle, preset.WheelWidth);
         }
 
         /// <summary>
@@ -917,14 +919,16 @@ namespace Vstancer.Client
             if (enableWS) {
                 if (DecorExistOn(vehicle, WheelSizeID)) {
                     float value = DecorGetFloat(vehicle, WheelSizeID);
-                    SetVehicleWheelSize(vehicle, value);
+                    if (value != 0.0f)
+                        SetVehicleWheelSize(vehicle, value);
                 }
             }
 
             if (enableWW) {
                 if (DecorExistOn(vehicle, WheelWidthID)) {
                     float value = DecorGetFloat(vehicle, WheelWidthID);
-                    SetVehicleWheelWidth(vehicle, value);
+                    if (value != 0.0f)
+                        SetVehicleWheelWidth(vehicle, value);
                 }
             }
         }

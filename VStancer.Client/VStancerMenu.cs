@@ -171,6 +171,7 @@ namespace Vstancer.Client {
                         SavePreset();
                     } else if (menuItem.ItemData as string == LoadID) {
                         LoadPreset();
+                        UpdateWheelValues();
                     }
                 };
             }

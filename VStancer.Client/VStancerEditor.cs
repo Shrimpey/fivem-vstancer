@@ -650,13 +650,19 @@ namespace Vstancer.Client
             }
 
             if (defaultWheelSize != null && defaultWheelSize is float) {
-                wheel_size_def = (float)defaultWheelSize;
+                if ((float)defaultWheelSize != 0.0f)
+                    wheel_size_def = (float)defaultWheelSize;
+                else
+                    wheel_size_def = GetVehicleWheelSize(vehicle);
             } else {
                 wheel_size_def = DecorExistOn(vehicle, DefaultWheelSizeID) ? DecorGetFloat(vehicle, DefaultWheelSizeID) : GetVehicleWheelSize(vehicle);
             }
 
             if (defaultWheelWidth != null && defaultWheelWidth is float) {
-                wheel_width_def = (float)defaultWheelWidth;
+                if ((float)defaultWheelWidth != 0.0f)
+                    wheel_width_def = (float)defaultWheelWidth;
+                else
+                    wheel_width_def = GetVehicleWheelWidth(vehicle);
             } else {
                 wheel_width_def = DecorExistOn(vehicle, DefaultWheelWidthID) ? DecorGetFloat(vehicle, DefaultWheelWidthID) : GetVehicleWheelWidth(vehicle);
             }

@@ -146,6 +146,20 @@ namespace Vstancer.Client
             if (!CurrentPresetIsValid)
                 return;
 
+            playerPed = PlayerPedId();
+
+            if (IsPedInAnyVehicle(playerPed, false)) {
+                int vehicle = GetVehiclePedIsIn(playerPed, false);
+                if (IsThisModelACar((uint)GetEntityModel(vehicle)) && GetPedInVehicleSeat(vehicle, -1) == playerPed && IsVehicleDriveable(vehicle, false)) {
+                    if(GetVehicleWheelSize(vehicle) != 0.0f && currentPreset.DefaultWheelSize == 0.0f) {
+                        currentPreset.WheelSize = GetVehicleWheelSize(vehicle);
+                    }
+                    if (GetVehicleWheelWidth(vehicle) != 0.0f && currentPreset.DefaultWheelWidth == 0.0f) {
+                        currentPreset.WheelWidth = GetVehicleWheelWidth(vehicle);
+                    }
+                }
+            }
+
             currentPreset.Reset();
             RemoveDecorators(currentVehicle);
 
@@ -636,6 +650,10 @@ namespace Vstancer.Client
 
             if (vehicle == currentVehicle)
             {
+                currentPreset.wheelSizeMinVal = wheelSizeMinVal;
+                currentPreset.wheelSizeMaxVal = wheelSizeMaxVal;
+                currentPreset.wheelWidthMinVal = wheelWidthMinVal;
+                currentPreset.wheelWidthMaxVal = wheelWidthMaxVal;
                 currentPreset = new VStancerPreset(wheelsCount, frontOffset, frontRotation, rearOffset, rearRotation, steeringLock, suspensionHeight, wheelSize, wheelWidth, off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def, wheel_size_def, wheel_width_def);
                 PresetChanged?.Invoke(this, EventArgs.Empty);
             }

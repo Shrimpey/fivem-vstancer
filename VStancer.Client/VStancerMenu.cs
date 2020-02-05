@@ -239,9 +239,17 @@ namespace Vstancer.Client {
             var playerPed = PlayerPedId();
             if (IsPedInAnyVehicle(playerPed, false)){
                 int vehicle = GetVehiclePedIsIn(playerPed, false);
-                if (vehicle >= 0) {
-                    currentPreset.WheelSize = GetVehicleWheelSize(vehicle);
-                    currentPreset.WheelWidth = GetVehicleWheelWidth(vehicle);
+                if (IsThisModelACar((uint)GetEntityModel(vehicle)) && GetPedInVehicleSeat(vehicle, -1) == playerPed && IsVehicleDriveable(vehicle, false)) {
+                    if(currentPreset.WheelSize == 0.0f)
+                        currentPreset.WheelSize = GetVehicleWheelSize(vehicle);
+                    if (currentPreset.WheelWidth == 0.0f)
+                        currentPreset.WheelWidth = GetVehicleWheelWidth(vehicle);
+                    if (currentPreset.DefaultWheelSize == 0.0f && GetVehicleWheelSize(vehicle) != 0.0f) {
+                        currentPreset.DefaultWheelSize = GetVehicleWheelSize(vehicle);
+                    }
+                    if (currentPreset.DefaultWheelWidth == 0.0f && GetVehicleWheelWidth(vehicle) != 0.0f) {
+                        currentPreset.DefaultWheelWidth = GetVehicleWheelWidth(vehicle);
+                    }
                 }
             }
         }
@@ -290,16 +298,12 @@ namespace Vstancer.Client {
                         if (loadedPreset.Length > 6)
                         {
                             float wheelSizeTemp = loadedPreset[6];
-                            if(wheelSizeTemp == 0.0f) {
-                                wheelSizeTemp = (wheelSizeMinVal + wheelSizeMaxVal) / 2.0f;
-                            }else if (wheelSizeTemp < 0.0f) {
+                            if (wheelSizeTemp < 0.0f) {
                                 wheelSizeTemp *= -1.0f;
                             }
 
                             float wheelWidthTemp = loadedPreset[7];
-                            if (wheelWidthTemp == 0.0f) {
-                                wheelWidthTemp = (wheelWidthMinVal + wheelWidthMaxVal) / 2.0f;
-                            }else if (wheelSizeTemp < 0.0f) {
+                            if (wheelSizeTemp < 0.0f) {
                                 wheelSizeTemp *= -1.0f;
                             }
                             vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5], wheelSizeTemp, wheelWidthTemp);

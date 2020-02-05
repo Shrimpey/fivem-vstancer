@@ -5,6 +5,11 @@ namespace Vstancer.Client
 {
     public class VStancerPreset : IEquatable<VStancerPreset>
     {
+        public float wheelSizeMinVal;
+        public float wheelSizeMaxVal;
+        public float wheelWidthMinVal;
+        public float wheelWidthMaxVal;
+
         public static float Precision { get; private set; } = 0.001f;
         public int WheelsCount { get; private set; }
         public int FrontWheelsCount { get; private set; }

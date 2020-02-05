@@ -309,12 +309,14 @@ namespace Vstancer.Client {
                             }
 
                             float wheelWidthTemp = loadedPreset[7];
-                            if (wheelSizeTemp < 0.0f) {
-                                wheelSizeTemp *= -1.0f;
+                            if (wheelWidthTemp < 0.0f) {
+                                wheelWidthTemp *= -1.0f;
                             }
                             vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5], wheelSizeTemp, wheelWidthTemp);
-                            Debug.WriteLine($"[vStancer] Loaded preset for " + name + "!");
+                        } else {
+                            vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5], 0.0f, 0.0f);
                         }
+                        Debug.WriteLine($"[vStancer] Loaded preset for " + name + "!");
                 }
             }
             await Delay(0);

@@ -93,12 +93,12 @@ namespace Vstancer.Client
             OffsetX = new float[] { 0, 0, 0, 0 };
             SteeringLock = 65f;
             SuspensionHeight = 0.0f;
-            WheelSize = 1.0f;
-            WheelWidth = 1.0f;
+            WheelSize = 0.0f;
+            WheelWidth = 0.0f;
             DefaultSteeringLock = 65f;
             DefaultSuspensionHeight = 0.0f;
-            DefaultWheelSize = 1.0f;
-            DefaultWheelWidth = 1.0f;
+            DefaultWheelSize = 0.0f;
+            DefaultWheelWidth = 0.0f;
         }
 
         public VStancerPreset(int count, float[] defRot, float[] defOff, float defSteerLock, float defSuspHeight, float defWheelSize, float defWheelWidth)

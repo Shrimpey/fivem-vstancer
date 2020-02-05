@@ -78,6 +78,8 @@ namespace Vstancer.Client {
         private VStancerPreset currentPreset => vstancerEditor.currentPreset;
         private int toggleMenu => vstancerEditor.toggleMenu;
         private float FloatStep => vstancerEditor.FloatStep;
+        private bool enableSH => vstancerEditor.enableSH;
+        private bool enableSL => vstancerEditor.enableSL;
 
         #endregion
 
@@ -200,13 +202,17 @@ namespace Vstancer.Client {
             AddDynamicFloatList(editorMenu, "Front Camber", currentPreset.DefaultRotationY[0], currentPreset.RotationY[0], frontMaxCamber, FrontRotationID);
             AddDynamicFloatList(editorMenu, "Rear Camber", currentPreset.DefaultRotationY[currentPreset.FrontWheelsCount], currentPreset.RotationY[currentPreset.FrontWheelsCount], rearMaxCamber, RearRotationID);
             // Steering lock, custom min max
-            var callbackSL = FloatChangeCallback("Steering Lock", currentPreset.SteeringLock, steeringLockMinVal, steeringLockMaxVal, 1f);
-            var newitemSL = new MenuDynamicListItem("Steering Lock", currentPreset.SteeringLock.ToString("F3"), callbackSL) { ItemData = SteeringLockID };
-            editorMenu.AddMenuItem(newitemSL);
+            if (enableSL) {
+                var callbackSL = FloatChangeCallback("Steering Lock", currentPreset.SteeringLock, steeringLockMinVal, steeringLockMaxVal, 1f);
+                var newitemSL = new MenuDynamicListItem("Steering Lock", currentPreset.SteeringLock.ToString("F3"), callbackSL) { ItemData = SteeringLockID };
+                editorMenu.AddMenuItem(newitemSL);
+            }
             // Suspension height, custom min max
-            var callbackSH = FloatChangeCallback("Suspension Height", currentPreset.SuspensionHeight, suspensionHeightMinVal, suspensionHeightMaxVal, 0.005f);
-            var newitemSH = new MenuDynamicListItem("Suspension Height", currentPreset.SuspensionHeight.ToString("F3"), callbackSH) { ItemData = SuspensionHeightID };
-            editorMenu.AddMenuItem(newitemSH);
+            if (enableSH) {
+                var callbackSH = FloatChangeCallback("Suspension Height", currentPreset.SuspensionHeight, suspensionHeightMinVal, suspensionHeightMaxVal, 0.005f);
+                var newitemSH = new MenuDynamicListItem("Suspension Height", currentPreset.SuspensionHeight.ToString("F3"), callbackSH) { ItemData = SuspensionHeightID };
+                editorMenu.AddMenuItem(newitemSH);
+            }
             // Wheel size, custom min max
             var callbackWS = FloatChangeCallback("Wheel size", currentPreset.WheelSize, wheelSizeMinVal, wheelSizeMaxVal, 0.025f);
             var newitemWS = new MenuDynamicListItem("Wheel size", currentPreset.WheelSize.ToString("F3"), callbackWS, "Only works on non-default wheels") { ItemData = WheelSizeID };
@@ -232,7 +238,7 @@ namespace Vstancer.Client {
             editorMenu.AddMenuItem(new MenuItem("Load preset", "Loads preset for this vehicle") { ItemData = LoadID });
             editorMenu.AddMenuItem(new MenuItem("Credits",  "~g~Carmineos~g~~w~ - Author of vStancer~w~\n" +
                                                             "~y~Tom Grobbe~y~~w~ - MenuAPI used for GUI~w~\n" +
-                                                            "~y~Shrimp~y~~w~ - Additional functionality (SL, SH, wheel size/width, presets)~w~\n" + "\n"));
+                                                            "~y~Shrimp~y~~w~ - Additional functionality (SL, SH, wheel size/width, presets)~w~\n" + " \n"));
         }
 
         private void UpdateWheelValues(){

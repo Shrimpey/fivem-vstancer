@@ -79,6 +79,9 @@ namespace Vstancer.Client
         public float wheelSizeMaxVal = 2.0f;
         public float wheelWidthMinVal = 0.1f;
         public float wheelWidthMaxVal = 2.0f;
+        // Enabling SH & SL options
+        public bool enableSH = true;
+        public bool enableSL = true;
 
         private float FloatPrecision = 0.001f;
         private long timer = 1000;
@@ -626,15 +629,23 @@ namespace Vstancer.Client
             else
                 rot_r_def = DecorExistOn(vehicle, DefaultRearRotationID) ? DecorGetFloat(vehicle, DefaultRearRotationID) : GetVehicleWheelYRotation(vehicle, frontCount);
 
-            if (defaultSteeringLock != null && defaultSteeringLock is float)
-                steering_lock_def = (float)defaultSteeringLock;
-            else
-                steering_lock_def = DecorExistOn(vehicle, DefaultSteeringLockID) ? DecorGetFloat(vehicle, DefaultSteeringLockID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock");
+            if (enableSL) {
+                if (defaultSteeringLock != null && defaultSteeringLock is float)
+                    steering_lock_def = (float)defaultSteeringLock;
+                else
+                    steering_lock_def = DecorExistOn(vehicle, DefaultSteeringLockID) ? DecorGetFloat(vehicle, DefaultSteeringLockID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock");
+            } else {
+                steering_lock_def = 0.0f;
+            }
 
-            if (defaultSuspensionHeight != null && defaultSuspensionHeight is float)
-                susp_height_def = (float)defaultSuspensionHeight;
-            else
-                susp_height_def = DecorExistOn(vehicle, DefaultSuspensionHeightID) ? DecorGetFloat(vehicle, DefaultSuspensionHeightID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise");
+            if (enableSH) {
+                if (defaultSuspensionHeight != null && defaultSuspensionHeight is float)
+                    susp_height_def = (float)defaultSuspensionHeight;
+                else
+                    susp_height_def = DecorExistOn(vehicle, DefaultSuspensionHeightID) ? DecorGetFloat(vehicle, DefaultSuspensionHeightID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise");
+            } else {
+                susp_height_def = 0.0f;
+            }
 
             if (defaultWheelSize != null && defaultWheelSize is float) {
                 wheel_size_def = (float)defaultWheelSize;
@@ -663,8 +674,10 @@ namespace Vstancer.Client
                 UpdateFloatDecorator(vehicle, DefaultFrontRotationID, rot_f_def, frontRotation);
                 UpdateFloatDecorator(vehicle, DefaultRearOffsetID, off_r_def, rearOffset);
                 UpdateFloatDecorator(vehicle, DefaultRearRotationID, rot_r_def, rearRotation);
-                UpdateFloatDecorator(vehicle, DefaultSteeringLockID, steering_lock_def, steeringLock);
-                UpdateFloatDecorator(vehicle, DefaultSuspensionHeightID, susp_height_def, suspensionHeight);
+                if (enableSL)
+                    UpdateFloatDecorator(vehicle, DefaultSteeringLockID, steering_lock_def, steeringLock);
+                if (enableSH)
+                    UpdateFloatDecorator(vehicle, DefaultSuspensionHeightID, susp_height_def, suspensionHeight);
                 UpdateFloatDecorator(vehicle, DefaultWheelSizeID, wheel_size_def, wheelSize);
                 UpdateFloatDecorator(vehicle, DefaultWheelWidthID, wheel_width_def, wheelWidth);
 
@@ -672,8 +685,10 @@ namespace Vstancer.Client
                 UpdateFloatDecorator(vehicle, FrontRotationID, frontRotation, rot_f_def);
                 UpdateFloatDecorator(vehicle, RearOffsetID, rearOffset, off_r_def);
                 UpdateFloatDecorator(vehicle, RearRotationID, rearRotation, rot_r_def);
-                UpdateFloatDecorator(vehicle, SteeringLockID, steeringLock, steering_lock_def);
-                UpdateFloatDecorator(vehicle, SuspensionHeightID, suspensionHeight, susp_height_def);
+                if(enableSL)
+                    UpdateFloatDecorator(vehicle, SteeringLockID, steeringLock, steering_lock_def);
+                if (enableSH)
+                    UpdateFloatDecorator(vehicle, SuspensionHeightID, suspensionHeight, susp_height_def);
                 UpdateFloatDecorator(vehicle, WheelSizeID, wheelSize, wheel_size_def);
                 UpdateFloatDecorator(vehicle, WheelWidthID, wheelWidth, wheel_width_def);
             }
@@ -735,8 +750,10 @@ namespace Vstancer.Client
             UpdateFloatDecorator(vehicle, DefaultFrontRotationID, DefaultRotationY[0], RotationY[0]);
             UpdateFloatDecorator(vehicle, DefaultRearOffsetID, DefaultOffsetX[frontCount], OffsetX[frontCount]);
             UpdateFloatDecorator(vehicle, DefaultRearRotationID, DefaultRotationY[frontCount], RotationY[frontCount]);
-            UpdateFloatDecorator(vehicle, DefaultSteeringLockID, DefaultSteeringLock, SteeringLock);
-            UpdateFloatDecorator(vehicle, DefaultSuspensionHeightID, DefaultSuspensionHeight, SuspensionHeight);
+            if (enableSL)
+                UpdateFloatDecorator(vehicle, DefaultSteeringLockID, DefaultSteeringLock, SteeringLock);
+            if (enableSH)
+                UpdateFloatDecorator(vehicle, DefaultSuspensionHeightID, DefaultSuspensionHeight, SuspensionHeight);
             UpdateFloatDecorator(vehicle, DefaultWheelSizeID, DefaultWheelSize, WheelSize);
             UpdateFloatDecorator(vehicle, DefaultWheelWidthID, DefaultWheelWidth, WheelWidth);
 
@@ -744,8 +761,10 @@ namespace Vstancer.Client
             UpdateFloatDecorator(vehicle, FrontRotationID, RotationY[0], DefaultRotationY[0]);
             UpdateFloatDecorator(vehicle, RearOffsetID, OffsetX[frontCount], DefaultOffsetX[frontCount]);
             UpdateFloatDecorator(vehicle, RearRotationID, RotationY[frontCount], DefaultRotationY[frontCount]);
-            UpdateFloatDecorator(vehicle, SteeringLockID, SteeringLock, DefaultSteeringLock);
-            UpdateFloatDecorator(vehicle, SuspensionHeightID, SuspensionHeight, DefaultSuspensionHeight);
+            if (enableSL)
+                UpdateFloatDecorator(vehicle, SteeringLockID, SteeringLock, DefaultSteeringLock);
+            if (enableSH)
+                UpdateFloatDecorator(vehicle, SuspensionHeightID, SuspensionHeight, DefaultSuspensionHeight);
             UpdateFloatDecorator(vehicle, DefaultWheelSizeID, WheelSize, DefaultWheelSize);
             UpdateFloatDecorator(vehicle, DefaultWheelWidthID, WheelWidth, DefaultWheelWidth);
         }
@@ -799,8 +818,11 @@ namespace Vstancer.Client
                 SetVehicleWheelXOffset(vehicle, index, preset.OffsetX[index]);
                 SetVehicleWheelYRotation(vehicle, index, preset.RotationY[index]);
             }
-            SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock", preset.SteeringLock);
-            SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise", preset.SuspensionHeight);
+
+            if (enableSL)
+                SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock", preset.SteeringLock);
+            if (enableSH)
+                SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise", preset.SuspensionHeight);
 
             SetVehicleWheelSize(vehicle, preset.WheelSize);
             SetVehicleWheelWidth(vehicle, preset.WheelWidth);
@@ -867,14 +889,18 @@ namespace Vstancer.Client
                 }
             }
 
-            if (DecorExistOn(vehicle, SteeringLockID)) {
-                float value = DecorGetFloat(vehicle, SteeringLockID);
-                SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock", value);
+            if (enableSL) {
+                if (DecorExistOn(vehicle, SteeringLockID)) {
+                    float value = DecorGetFloat(vehicle, SteeringLockID);
+                    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock", value);
+                }
             }
 
-            if (DecorExistOn(vehicle, SuspensionHeightID)) {
-                float value = DecorGetFloat(vehicle, SuspensionHeightID);
-                SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise", value);
+            if (enableSH) {
+                if (DecorExistOn(vehicle, SuspensionHeightID)) {
+                    float value = DecorGetFloat(vehicle, SuspensionHeightID);
+                    SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise", value);
+                }
             }
 
             if (DecorExistOn(vehicle, WheelSizeID)) {
@@ -1034,6 +1060,8 @@ namespace Vstancer.Client
                 debug = config.GetBoolValue("debug", debug);
                 exposeCommand = config.GetBoolValue("exposeCommand", exposeCommand);
                 exposeEvent = config.GetBoolValue("exposeEvent", exposeEvent);
+                enableSH = config.GetBoolValue("enableSH", enableSH);
+                enableSL = config.GetBoolValue("enableSL", enableSL);
 
                 Debug.WriteLine($"{ScriptName}: Settings {nameof(frontMaxOffset)}={frontMaxOffset} {nameof(frontMaxCamber)}={frontMaxCamber} {nameof(rearMaxOffset)}={rearMaxOffset} {nameof(rearMaxCamber)}={rearMaxCamber} {nameof(steeringLockMinVal)}={steeringLockMinVal} {nameof(steeringLockMaxVal)}={steeringLockMaxVal} {nameof(suspensionHeightMinVal)}={suspensionHeightMinVal} {nameof(suspensionHeightMaxVal)}={suspensionHeightMaxVal} {nameof(wheelSizeMinVal)}={wheelSizeMinVal} {nameof(wheelSizeMaxVal)}={wheelSizeMaxVal} {nameof(wheelWidthMinVal)}={wheelWidthMinVal} {nameof(wheelWidthMaxVal)}={wheelWidthMaxVal} {nameof(timer)}={timer} {nameof(debug)}={debug} {nameof(ScriptRange)}={ScriptRange}");
             }

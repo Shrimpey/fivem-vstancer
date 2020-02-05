@@ -313,12 +313,12 @@ namespace Vstancer.Client {
                         {
                             float wheelSizeTemp = loadedPreset[6];
                             if (wheelSizeTemp < 0.0f) {
-                                wheelSizeTemp = 0.0f;
+                                wheelSizeTemp = GetVehicleWheelSize(vehicle);
                             }
 
                             float wheelWidthTemp = loadedPreset[7];
                             if (wheelWidthTemp < 0.0f) {
-                                wheelWidthTemp = 0.0f;
+                                wheelWidthTemp = GetVehicleWheelWidth(vehicle);
                             }
                             vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5], wheelSizeTemp, wheelWidthTemp);
                         } else {

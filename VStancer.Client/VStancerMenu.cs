@@ -80,6 +80,8 @@ namespace Vstancer.Client {
         private float FloatStep => vstancerEditor.FloatStep;
         private bool enableSH => vstancerEditor.enableSH;
         private bool enableSL => vstancerEditor.enableSL;
+        private bool enableWS => vstancerEditor.enableWS;
+        private bool enableWW => vstancerEditor.enableWW;
 
         #endregion
 
@@ -214,23 +216,28 @@ namespace Vstancer.Client {
                 editorMenu.AddMenuItem(newitemSH);
             }
             // Wheel size, custom min max
-            var callbackWS = FloatChangeCallback("Wheel size", currentPreset.WheelSize, wheelSizeMinVal, wheelSizeMaxVal, 0.025f);
-            var newitemWS = new MenuDynamicListItem("Wheel size", currentPreset.WheelSize.ToString("F3"), callbackWS, "Only works on non-default wheels") { ItemData = WheelSizeID };
-            editorMenu.AddMenuItem(newitemWS);
-            // Wheel width, custom min max
-            var callbackWW = FloatChangeCallback("Wheel width", currentPreset.WheelWidth, wheelWidthMinVal, wheelWidthMaxVal, 0.025f);
-            var newitemWW = new MenuDynamicListItem("Wheel width", currentPreset.WheelWidth.ToString("F3"), callbackWW, "Only works on non-default wheels") { ItemData = WheelWidthID };
-            editorMenu.AddMenuItem(newitemWW);
-
-            if (hideWheelSize) {
-                newitemWS.Enabled = false;
-            } else {
-                newitemWS.Enabled = true;
+            if (enableWS) {
+                var callbackWS = FloatChangeCallback("Wheel size", currentPreset.WheelSize, wheelSizeMinVal, wheelSizeMaxVal, 0.025f);
+                var newitemWS = new MenuDynamicListItem("Wheel size", currentPreset.WheelSize.ToString("F3"), callbackWS, "Only works on non-default wheels") { ItemData = WheelSizeID };
+                editorMenu.AddMenuItem(newitemWS);
+                
+                if (hideWheelSize) {
+                    newitemWS.Enabled = false;
+                } else {
+                    newitemWS.Enabled = true;
+                }
             }
-            if (hideWheelWidth) {
-                newitemWW.Enabled = false;
-            } else {
-                newitemWW.Enabled = true;
+            // Wheel width, custom min max
+            if (enableWW) {
+                var callbackWW = FloatChangeCallback("Wheel width", currentPreset.WheelWidth, wheelWidthMinVal, wheelWidthMaxVal, 0.025f);
+                var newitemWW = new MenuDynamicListItem("Wheel width", currentPreset.WheelWidth.ToString("F3"), callbackWW, "Only works on non-default wheels") { ItemData = WheelWidthID };
+                editorMenu.AddMenuItem(newitemWW);
+
+                if (hideWheelWidth) {
+                    newitemWW.Enabled = false;
+                } else {
+                    newitemWW.Enabled = true;
+                }
             }
 
             editorMenu.AddMenuItem(new MenuItem("Reset", "Restores the default values") { ItemData = ResetID });
@@ -305,12 +312,12 @@ namespace Vstancer.Client {
                         {
                             float wheelSizeTemp = loadedPreset[6];
                             if (wheelSizeTemp < 0.0f) {
-                                wheelSizeTemp *= -1.0f;
+                                wheelSizeTemp = 0.0f;
                             }
 
                             float wheelWidthTemp = loadedPreset[7];
                             if (wheelWidthTemp < 0.0f) {
-                                wheelWidthTemp *= -1.0f;
+                                wheelWidthTemp = 0.0f;
                             }
                             vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5], wheelSizeTemp, wheelWidthTemp);
                         } else {

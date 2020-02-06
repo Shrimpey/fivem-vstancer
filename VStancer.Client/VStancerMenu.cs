@@ -308,23 +308,25 @@ namespace Vstancer.Client {
                 {
                     string name = GetDisplayNameFromVehicleModel((uint)GetEntityModel(vehicle));
                     float[] loadedPreset = LoadPresetFromKVP(name);
-                    if (loadedPreset != null)
-                        if (loadedPreset.Length > 6)
-                        {
-                            float wheelSizeTemp = loadedPreset[6];
-                            if (wheelSizeTemp < 0.0f) {
-                                wheelSizeTemp = GetVehicleWheelSize(vehicle);
-                            }
+                    if (loadedPreset != null) {
 
-                            float wheelWidthTemp = loadedPreset[7];
-                            if (wheelWidthTemp < 0.0f) {
-                                wheelWidthTemp = GetVehicleWheelWidth(vehicle);
-                            }
-                            vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5], wheelSizeTemp, wheelWidthTemp);
-                        } else {
-                            vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], loadedPreset[4], loadedPreset[5], 0.0f, 0.0f);
+                        float steeringLockTemp =        (loadedPreset.Length > 4) ? (loadedPreset[4]) : (GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock"));
+                        float suspensionHeightTemp =    (loadedPreset.Length > 4) ? (loadedPreset[5]) : (GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise"));
+                        float wheelSizeTemp =           (loadedPreset.Length > 6) ? (loadedPreset[6]) : (GetVehicleWheelSize(vehicle));
+                        float wheelWidthTemp =          (loadedPreset.Length > 6) ? (loadedPreset[7]) : (GetVehicleWheelWidth(vehicle));
+
+                        if (wheelSizeTemp < 0.0f) {
+                            wheelSizeTemp *= -1f;
                         }
+                        
+                        if (wheelWidthTemp < 0.0f) {
+                            wheelWidthTemp *= -1f;
+                        }
+                        vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], steeringLockTemp, suspensionHeightTemp, wheelSizeTemp, wheelWidthTemp);
                         Debug.WriteLine($"[vStancer] Loaded preset for " + name + "!");
+                    } else {
+                        Debug.WriteLine($"[vStancer] Preset for " + name + " is null!");
+                    }
                 }
             }
             await Delay(0);
@@ -357,11 +359,16 @@ namespace Vstancer.Client {
             Debug.WriteLine($"[vStancer] Loading preset for " + name + "...");
             if (GetResourceKvpString("vStancer_PRESET_" + name) != null)
             {
-                return (float[])JsonConvert.DeserializeObject<float[]>(GetResourceKvpString("vStancer_PRESET_" + name));
+                var settings = new JsonSerializerSettings {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    MissingMemberHandling = MissingMemberHandling.Ignore
+                };
+
+                return (float[])JsonConvert.DeserializeObject<float[]>(GetResourceKvpString("vStancer_PRESET_" + name), settings);
             }
             else
             {
-                Debug.WriteLine($"[vStancer] Failed to load preset for " + name + "...");
+                Debug.WriteLine($"[vStancer] There's no preset for " + name + " or it got corrupted...");
                 return null;
             }
         }

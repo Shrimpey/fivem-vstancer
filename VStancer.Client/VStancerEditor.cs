@@ -158,9 +158,11 @@ namespace Vstancer.Client
                 if (IsThisModelACar((uint)GetEntityModel(vehicle)) && GetPedInVehicleSeat(vehicle, -1) == playerPed && IsVehicleDriveable(vehicle, false)) {
                     if(GetVehicleWheelSize(vehicle) != 0.0f && currentPreset.DefaultWheelSize == 0.0f) {
                         currentPreset.WheelSize = GetVehicleWheelSize(vehicle);
+                        currentPreset.DefaultWheelSize = currentPreset.WheelSize;
                     }
                     if (GetVehicleWheelWidth(vehicle) != 0.0f && currentPreset.DefaultWheelWidth == 0.0f) {
                         currentPreset.WheelWidth = GetVehicleWheelWidth(vehicle);
+                        currentPreset.DefaultWheelWidth = currentPreset.WheelWidth;
                     }
                 }
             }

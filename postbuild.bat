@@ -1,1 +1,1 @@
-copy /y %1 D:\FiveM\ServerData\resources\vstancer
+copy /y %1 D:\FiveM\ServerLegit\ServerData\resources\vstancer

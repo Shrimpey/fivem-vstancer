@@ -312,9 +312,12 @@ namespace Vstancer.Client {
 
                         float steeringLockTemp =        (loadedPreset.Length > 4) ? (loadedPreset[4]) : (GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock"));
                         float suspensionHeightTemp =    (loadedPreset.Length > 4) ? (loadedPreset[5]) : (GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise"));
-                        float wheelSizeTemp =           (loadedPreset.Length > 6) ? (loadedPreset[6]) : (GetVehicleWheelSize(vehicle));
-                        float wheelWidthTemp =          (loadedPreset.Length > 6) ? (loadedPreset[7]) : (GetVehicleWheelWidth(vehicle));
 
+                        //for(int i=0; i< loadedPreset.Length; i++) {
+                        //    Debug.WriteLine("LoadPreset(): " + i + ": " + loadedPreset[i] + ", ");
+                        //}
+                        float wheelSizeTemp =           (loadedPreset.Length > 12) ? (loadedPreset[12]) : (GetVehicleWheelSize(vehicle));
+                        float wheelWidthTemp =          (loadedPreset.Length > 12) ? (loadedPreset[13]) : (GetVehicleWheelWidth(vehicle));
                         if (wheelSizeTemp < 0.0f) {
                             wheelSizeTemp *= -1f;
                         }

@@ -6,6 +6,8 @@ This is a custom version of vStancer. It provides following additional functiona
 * steering lock
 * visual wheel size
 * visual wheel width
+* wheel collider size
+* wheel collider width
 * preset saving and loading
 ---
 |Master|Development|

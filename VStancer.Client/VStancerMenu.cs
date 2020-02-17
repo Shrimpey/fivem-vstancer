@@ -61,6 +61,8 @@ namespace Vstancer.Client {
         private string SuspensionHeightID => VStancerEditor.SuspensionHeightID;
         private string WheelSizeID => VStancerEditor.WheelSizeID;
         private string WheelWidthID => VStancerEditor.WheelWidthID;
+        private string WheelColSizeID => VStancerEditor.WheelColSizeID;
+        private string WheelColWidthID => VStancerEditor.WheelColWidthID;
         private string ScriptName => VStancerEditor.ScriptName;
         private float frontMaxOffset => vstancerEditor.frontMaxOffset;
         private float frontMaxCamber => vstancerEditor.frontMaxCamber;
@@ -74,6 +76,10 @@ namespace Vstancer.Client {
         private float wheelSizeMaxVal => vstancerEditor.wheelSizeMaxVal;
         private float wheelWidthMinVal => vstancerEditor.wheelWidthMinVal;
         private float wheelWidthMaxVal => vstancerEditor.wheelWidthMaxVal;
+        private float wheelColSizeMinVal => vstancerEditor.wheelColSizeMinVal;
+        private float wheelColSizeMaxVal => vstancerEditor.wheelColSizeMaxVal;
+        private float wheelColWidthMinVal => vstancerEditor.wheelColWidthMinVal;
+        private float wheelColWidthMaxVal => vstancerEditor.wheelColWidthMaxVal;
         private bool CurrentPresetIsValid => vstancerEditor.CurrentPresetIsValid;
         private VStancerPreset currentPreset => vstancerEditor.currentPreset;
         private int toggleMenu => vstancerEditor.toggleMenu;
@@ -82,6 +88,8 @@ namespace Vstancer.Client {
         private bool enableSL => vstancerEditor.enableSL;
         private bool enableWS => vstancerEditor.enableWS;
         private bool enableWW => vstancerEditor.enableWW;
+        private bool enableWCS => vstancerEditor.enableWCS;
+        private bool enableWCW => vstancerEditor.enableWCW;
 
         #endregion
 
@@ -99,7 +107,7 @@ namespace Vstancer.Client {
             string callback(MenuDynamicListItem sender, bool left) {
                 var min = minimum;
                 var max = maximum;
-
+                
                 var newvalue = value;
 
                 if (left)
@@ -240,6 +248,18 @@ namespace Vstancer.Client {
                     newitemWW.Enabled = true;
                 }
             }
+            // Wheel collider size, custom min max
+            if (enableWCS) {
+                var callbackWCS = FloatChangeCallback("Wheel col size", currentPreset.WheelColSize, wheelColSizeMinVal, wheelColSizeMaxVal, 0.025f);
+                var newitemWCS = new MenuDynamicListItem("Wheel col size", currentPreset.WheelColSize.ToString("F3"), callbackWCS, "Modify collider radius") { ItemData = WheelColSizeID };
+                editorMenu.AddMenuItem(newitemWCS);
+            }
+            // Wheel collider width, custom min max
+            if (enableWCW) {
+                var callbackWCW = FloatChangeCallback("Wheel col width", currentPreset.WheelColWidth, wheelColWidthMinVal, wheelColWidthMaxVal, 0.025f);
+                var newitemWCW = new MenuDynamicListItem("Wheel col width", currentPreset.WheelColWidth.ToString("F3"), callbackWCW, "Modify collider width") { ItemData = WheelColWidthID };
+                editorMenu.AddMenuItem(newitemWCW);
+            }
 
             editorMenu.AddMenuItem(new MenuItem("Reset", "Restores the default values") { ItemData = ResetID });
             editorMenu.AddMenuItem(new MenuItem("Save preset", "Saves preset for this vehicle") { ItemData = SaveID });
@@ -312,10 +332,6 @@ namespace Vstancer.Client {
 
                         float steeringLockTemp =        (loadedPreset.Length > 4) ? (loadedPreset[4]) : (GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock"));
                         float suspensionHeightTemp =    (loadedPreset.Length > 4) ? (loadedPreset[5]) : (GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise"));
-
-                        //for(int i=0; i< loadedPreset.Length; i++) {
-                        //    Debug.WriteLine("LoadPreset(): " + i + ": " + loadedPreset[i] + ", ");
-                        //}
                         float wheelSizeTemp =           (loadedPreset.Length > 12) ? (loadedPreset[12]) : (GetVehicleWheelSize(vehicle));
                         float wheelWidthTemp =          (loadedPreset.Length > 12) ? (loadedPreset[13]) : (GetVehicleWheelWidth(vehicle));
                         if (wheelSizeTemp < 0.0f) {
@@ -325,7 +341,9 @@ namespace Vstancer.Client {
                         if (wheelWidthTemp < 0.0f) {
                             wheelWidthTemp *= -1f;
                         }
-                        vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], steeringLockTemp, suspensionHeightTemp, wheelSizeTemp, wheelWidthTemp);
+                        float wheelColSizeTemp = (loadedPreset.Length > 16) ? (loadedPreset[16]) : (GetVehicleWheelTireColliderSize(vehicle, 0));
+                        float wheelColWidthTemp = (loadedPreset.Length > 16) ? (loadedPreset[17]) : (GetVehicleWheelTireColliderWidth(vehicle, 0));
+                        vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], steeringLockTemp, suspensionHeightTemp, wheelSizeTemp, wheelWidthTemp, wheelColSizeTemp, wheelColWidthTemp);
                         Debug.WriteLine($"[vStancer] Loaded preset for " + name + "!");
                     } else {
                         Debug.WriteLine($"[vStancer] Preset for " + name + " is null!");
@@ -344,7 +362,7 @@ namespace Vstancer.Client {
 
                 // Log
                 Debug.WriteLine($"[vStancer] Saving preset for " + name + "...");
-
+                
                 // Save
                 SetResourceKvp("vStancer_PRESET_" + name, json);
 

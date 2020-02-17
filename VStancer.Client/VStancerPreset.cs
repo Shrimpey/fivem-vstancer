@@ -5,11 +5,6 @@ namespace Vstancer.Client
 {
     public class VStancerPreset : IEquatable<VStancerPreset>
     {
-        public float wheelSizeMinVal;
-        public float wheelSizeMaxVal;
-        public float wheelWidthMinVal;
-        public float wheelWidthMaxVal;
-
         public static float Precision { get; private set; } = 0.001f;
         public int WheelsCount { get; private set; }
         public int FrontWheelsCount { get; private set; }
@@ -21,11 +16,15 @@ namespace Vstancer.Client
         public float SteeringLock { get; set; }
         public float SuspensionHeight { get; set; }
         public float WheelSize { get; set; }
+        public float WheelColSize { get; set; }
         public float WheelWidth { get; set; }
+        public float WheelColWidth { get; set; }
         public float DefaultSteeringLock { get; set; }
         public float DefaultSuspensionHeight { get; set; }
         public float DefaultWheelSize { get; set; }
+        public float DefaultWheelColSize { get; set; }
         public float DefaultWheelWidth { get; set; }
+        public float DefaultWheelColWidth { get; set; }
 
         public void SetOffsetFront(float value)
         {
@@ -63,8 +62,16 @@ namespace Vstancer.Client
             WheelSize = value;
         }
 
+        public void SetWheelColSize(float value) {
+            WheelColSize = value;
+        }
+
         public void SetWheelWidth(float value) {
             WheelWidth = value;
+        }
+
+        public void SetWheelColWidth(float value) {
+            WheelColWidth = value;
         }
 
         public bool IsEdited
@@ -76,7 +83,7 @@ namespace Vstancer.Client
                     if ((DefaultOffsetX[index] != OffsetX[index]) || (DefaultRotationY[index] != RotationY[index]))
                         return true;
                 }
-                if ((DefaultSteeringLock != SteeringLock) || (DefaultSuspensionHeight != SuspensionHeight) || (DefaultWheelSize != WheelSize) || (DefaultWheelWidth != WheelWidth))
+                if ((DefaultSteeringLock != SteeringLock) || (DefaultSuspensionHeight != SuspensionHeight) || (DefaultWheelSize != WheelSize) || (DefaultWheelWidth != WheelWidth) || (DefaultWheelColSize != WheelColSize) || (DefaultWheelColWidth != WheelColWidth))
                     return true;
                 return false;
             }
@@ -94,14 +101,18 @@ namespace Vstancer.Client
             SteeringLock = 65f;
             SuspensionHeight = 0.0f;
             WheelSize = 0.0f;
+            WheelColSize = 0.0f;
             WheelWidth = 0.0f;
+            WheelColWidth = 0.0f;
             DefaultSteeringLock = 65f;
             DefaultSuspensionHeight = 0.0f;
             DefaultWheelSize = 0.0f;
+            DefaultWheelColSize = 0.0f;
             DefaultWheelWidth = 0.0f;
+            DefaultWheelColWidth = 0.0f;
         }
 
-        public VStancerPreset(int count, float[] defRot, float[] defOff, float defSteerLock, float defSuspHeight, float defWheelSize, float defWheelWidth)
+        public VStancerPreset(int count, float[] defRot, float[] defOff, float defSteerLock, float defSuspHeight, float defWheelSize, float defWheelWidth, float defWheelColSize, float defWheelColWidth)
         {
             WheelsCount = count;
             FrontWheelsCount = CalculateFrontWheelsCount(WheelsCount);
@@ -127,9 +138,13 @@ namespace Vstancer.Client
             WheelSize = DefaultWheelSize;
             DefaultWheelWidth = defWheelWidth;
             WheelWidth = DefaultWheelWidth;
+            DefaultWheelColSize = defWheelColSize;
+            WheelColSize = DefaultWheelColSize;
+            DefaultWheelColWidth = defWheelColWidth;
+            WheelColWidth = DefaultWheelColWidth;
         }
 
-        public VStancerPreset(int count, float frontOffset, float frontRotation, float rearOffset, float rearRotation, float steeringLock, float suspensionHeight, float wheelSize, float wheelWidth, float defaultFrontOffset, float defaultFrontRotation, float defaultRearOffset, float defaultRearRotation, float defaultSteeringLock, float defaultSuspensionHeight, float defaultWheelSize, float defaultWheelWidth)
+        public VStancerPreset(int count, float frontOffset, float frontRotation, float rearOffset, float rearRotation, float steeringLock, float suspensionHeight, float wheelSize, float wheelWidth, float wheelColSize, float wheelColWidth, float defaultFrontOffset, float defaultFrontRotation, float defaultRearOffset, float defaultRearRotation, float defaultSteeringLock, float defaultSuspensionHeight, float defaultWheelSize, float defaultWheelWidth, float defaultWheelColSize, float defaultWheelColWidth)
         {
             WheelsCount = count;
 
@@ -183,6 +198,10 @@ namespace Vstancer.Client
             DefaultWheelSize = defaultWheelSize;
             WheelWidth = wheelWidth;
             DefaultWheelWidth = defaultWheelWidth;
+            WheelColSize = wheelColSize;
+            DefaultWheelColSize = defaultWheelColSize;
+            WheelColWidth = wheelColWidth;
+            DefaultWheelColWidth = defaultWheelColWidth;
         }
 
         public void Reset()
@@ -198,6 +217,8 @@ namespace Vstancer.Client
                 WheelSize = DefaultWheelSize;
             if (DefaultWheelWidth != 0.0f)
                 WheelWidth = DefaultWheelWidth;
+            WheelColSize = DefaultWheelColSize;
+            WheelColWidth = DefaultWheelColWidth;
         }
 
         public bool Equals(VStancerPreset other)
@@ -282,6 +303,10 @@ namespace Vstancer.Client
                 WheelWidth,
                 DefaultWheelSize,
                 DefaultWheelWidth,
+                WheelColSize,
+                WheelColWidth,
+                DefaultWheelColSize,
+                DefaultWheelColWidth,
             };
         }
     }

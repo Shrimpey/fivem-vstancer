@@ -54,10 +54,10 @@ namespace Vstancer.Client
         private IEnumerable<int> vehicles;
 
         /// <summary>
-        /// Additional Action delegate to support 17 parameter action (generic C# delegates only support up to 16 args) 
+        /// Additional Action delegate to support 21 parameter action (generic C# delegates only support up to 16 args) 
         /// </summary>
-        public delegate void Action<in T0, in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16>
-                                    (T0 P0, T1 P1, T2 P2, T3 P3, T4 P4, T5 P5, T6 P6, T7 P7, T8 P8, T9 P9, T10 P10, T11 P11, T12 P12, T13 P13, T14 P14, T15 P15, T16 P16);
+        public delegate void Action<in T0, in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16, in T17, in T18, in T19, in T20>
+                                    (T0 P0, T1 P1, T2 P2, T3 P3, T4 P4, T5 P5, T6 P6, T7 P7, T8 P8, T9 P9, T10 P10, T11 P11, T12 P12, T13 P13, T14 P14, T15 P15, T16 P16, T17 P17, T18 P18, T19 P19, T20 P20);
         #endregion
 
         #region Config Fields
@@ -79,11 +79,18 @@ namespace Vstancer.Client
         public float wheelSizeMaxVal = 2.0f;
         public float wheelWidthMinVal = 0.1f;
         public float wheelWidthMaxVal = 2.0f;
+        // Wheel collider stuff
+        public float wheelColSizeMinVal = 0.1f;
+        public float wheelColSizeMaxVal = 2.0f;
+        public float wheelColWidthMinVal = 0.1f;
+        public float wheelColWidthMaxVal = 2.0f;
         // Enabling additional fields
         public bool enableSH = true;
         public bool enableSL = true;
         public bool enableWS = true;
         public bool enableWW = true;
+        public bool enableWCS = true;
+        public bool enableWCW = true;
 
         private float FloatPrecision = 0.001f;
         private long timer = 1000;
@@ -103,6 +110,8 @@ namespace Vstancer.Client
         public const string SuspensionHeightID = "vstancer_susp_height";
         public const string WheelSizeID = "vstancer_wheel_size";
         public const string WheelWidthID = "vstancer_wheel_width";
+        public const string WheelColSizeID = "vstancer_wheel_col_size";
+        public const string WheelColWidthID = "vstancer_wheel_col_width";
 
         public const string DefaultFrontOffsetID = "vstancer_off_f_def";
         public const string DefaultFrontRotationID = "vstancer_rot_f_def";
@@ -112,6 +121,8 @@ namespace Vstancer.Client
         public const string DefaultSuspensionHeightID = "vstancer_susp_height_def";
         public const string DefaultWheelSizeID = "vstancer_wheel_size_def";
         public const string DefaultWheelWidthID = "vstancer_wheel_width_def";
+        public const string DefaultWheelColSizeID = "vstancer_wheel_col_size_def";
+        public const string DefaultWheelColWidthID = "vstancer_wheel_col_width_def";
 
         public const string ResetID = "vstancer_reset";
 
@@ -152,7 +163,7 @@ namespace Vstancer.Client
                 return;
 
             playerPed = PlayerPedId();
-
+            
             if (IsPedInAnyVehicle(playerPed, false)) {
                 int vehicle = GetVehiclePedIsIn(playerPed, false);
                 if (IsThisModelACar((uint)GetEntityModel(vehicle)) && GetPedInVehicleSeat(vehicle, -1) == playerPed && IsVehicleDriveable(vehicle, false)) {
@@ -228,6 +239,14 @@ namespace Vstancer.Client
             else if (id == WheelWidthID) {
                 currentPreset.SetWheelWidth(value);
                 defaultValue = currentPreset.DefaultWheelWidth;
+            }
+            else if (id == WheelColSizeID) {
+                currentPreset.SetWheelColSize(value);
+                defaultValue = currentPreset.DefaultWheelColSize;
+            }
+            else if (id == WheelColWidthID) {
+                currentPreset.SetWheelColWidth(value);
+                defaultValue = currentPreset.DefaultWheelColWidth;
             }
 
             // Force one single refresh to update rendering at correct position after reset
@@ -337,8 +356,8 @@ namespace Vstancer.Client
             }
             
             Exports.Add("SetVstancerPreset", new Action<    int,
-                                                            float, float, float, float, float, float, float, float,
-                                                            object, object, object, object, object, object, object, object>(SetVstancerPreset));
+                                                            float, float, float, float, float, float, float, float, float, float,
+                                                            object, object, object, object, object, object, object, object, object, object>(SetVstancerPreset));
             Exports.Add("GetVstancerPreset", new Func<int, float[]>(GetVstancerPreset));
 
             // Create a script for the menu ...
@@ -511,6 +530,11 @@ namespace Vstancer.Client
             DecorRegister(DefaultWheelSizeID, 1);
             DecorRegister(WheelWidthID, 1);
             DecorRegister(DefaultWheelWidthID, 1);
+
+            DecorRegister(WheelColSizeID, 1);
+            DecorRegister(DefaultWheelColSizeID, 1);
+            DecorRegister(WheelColWidthID, 1);
+            DecorRegister(DefaultWheelColWidthID, 1);
         }
 
         /// <summary>
@@ -566,6 +590,12 @@ namespace Vstancer.Client
 
             if (DecorExistOn(vehicle, DefaultWheelWidthID))
                 DecorRemove(vehicle, DefaultWheelWidthID);
+
+            if (DecorExistOn(vehicle, WheelColWidthID))
+                DecorRemove(vehicle, WheelColWidthID);
+
+            if (DecorExistOn(vehicle, DefaultWheelColWidthID))
+                DecorRemove(vehicle, DefaultWheelColWidthID);
         }
 
         /// <summary>
@@ -592,6 +622,8 @@ namespace Vstancer.Client
         /// <param name="suspensionHeight">Suspension height value</param>
         /// <param name="wheelSize">The wheel size value</param>
         /// <param name="wheelWidth">The wheel width value</param>
+        /// <param name="wheelColSize">The wheel collider size value</param>
+        /// <param name="wheelColWidth">The wheel collider width value</param>
         /// <param name="defaultFrontOffset">The default front offset value</param>
         /// <param name="defaultFrontRotation">The default front rotation value</param>
         /// <param name="defaultRearOffset">The default rear offset value</param>
@@ -600,10 +632,12 @@ namespace Vstancer.Client
         /// <param name="defaultSuspensionHeight">The default suspension height value</param>
         /// <param name="defaultWheelSize">The default wheel size value</param>
         /// <param name="defaultWheelWidth">The default wheel size value</param>
-        public void SetVstancerPreset(int vehicle, float frontOffset, float frontRotation, float rearOffset, float rearRotation, float steeringLock, float suspensionHeight, float wheelSize, float wheelWidth, object defaultFrontOffset = null, object defaultFrontRotation = null, object defaultRearOffset = null, object defaultRearRotation = null, object defaultSteeringLock = null, object defaultSuspensionHeight = null, object defaultWheelSize = null, object defaultWheelWidth = null)
+        /// <param name="defaultWheelColSize">The default wheel collider  size value</param>
+        /// <param name="defaultWheelColWidth">The default wheel collider size value</param>
+        public void SetVstancerPreset(int vehicle, float frontOffset, float frontRotation, float rearOffset, float rearRotation, float steeringLock, float suspensionHeight, float wheelSize, float wheelWidth, float wheelColSize, float wheelColWidth, object defaultFrontOffset = null, object defaultFrontRotation = null, object defaultRearOffset = null, object defaultRearRotation = null, object defaultSteeringLock = null, object defaultSuspensionHeight = null, object defaultWheelSize = null, object defaultWheelWidth = null, object defaultWheelColSize = null, object defaultWheelColWidth = null)
         {
             if (debug)
-                Debug.WriteLine($"{ScriptName}: SetVstancerPreset parameters {frontOffset} {frontRotation} {rearOffset} {rearRotation} {steeringLock} {suspensionHeight} {wheelSize} {wheelWidth} {defaultFrontOffset} {defaultFrontRotation} {defaultRearOffset} {defaultRearRotation} {defaultSteeringLock} {defaultSuspensionHeight} {defaultWheelSize} {defaultWheelWidth}");
+                Debug.WriteLine($"{ScriptName}: SetVstancerPreset parameters {frontOffset} {frontRotation} {rearOffset} {rearRotation} {steeringLock} {suspensionHeight} {wheelSize} {wheelWidth} {wheelColSize} {wheelColWidth} {defaultFrontOffset} {defaultFrontRotation} {defaultRearOffset} {defaultRearRotation} {defaultSteeringLock} {defaultSuspensionHeight} {defaultWheelSize} {defaultWheelWidth} {defaultWheelColSize} {defaultWheelColWidth}");
 
             if (!DoesEntityExist(vehicle))
                 return;
@@ -611,7 +645,7 @@ namespace Vstancer.Client
             int wheelsCount = GetVehicleNumberOfWheels(vehicle);
             int frontCount = VStancerPreset.CalculateFrontWheelsCount(wheelsCount);
 
-            float off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def, wheel_size_def, wheel_width_def;
+            float off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def, wheel_size_def, wheel_width_def, wheel_col_size_def, wheel_col_width_def;
 
             if (defaultFrontOffset != null && defaultFrontOffset is float)
                 off_f_def = (float)defaultFrontOffset;
@@ -651,6 +685,26 @@ namespace Vstancer.Client
                 susp_height_def = 0.0f;
             }
 
+            if (enableWCS) {
+                if (defaultWheelColSize != null && defaultWheelColSize is float) {
+                    wheel_col_size_def = (float)defaultWheelColSize;
+                } else {
+                    wheel_col_size_def = DecorExistOn(vehicle, DefaultWheelColSizeID) ? DecorGetFloat(vehicle, DefaultWheelColSizeID) : GetVehicleWheelTireColliderSize(vehicle, 0);
+                }
+            } else {
+                wheel_col_size_def = 0.1f;
+            }
+
+            if (enableWCW) {
+                if (defaultWheelColWidth != null && defaultWheelColWidth is float) {
+                    wheel_col_width_def = (float)defaultWheelColWidth;
+                } else {
+                    wheel_col_width_def = DecorExistOn(vehicle, DefaultWheelColWidthID) ? DecorGetFloat(vehicle, DefaultWheelColWidthID) : GetVehicleWheelTireColliderWidth(vehicle, 0);
+                }
+            } else {
+                wheel_col_width_def = 0.1f;
+            }
+
             if (defaultWheelSize != null && defaultWheelSize is float) {
                 if ((float)defaultWheelSize != 0.0f)
                     wheel_size_def = (float)defaultWheelSize;
@@ -671,11 +725,7 @@ namespace Vstancer.Client
 
             if (vehicle == currentVehicle)
             {
-                currentPreset.wheelSizeMinVal = wheelSizeMinVal;
-                currentPreset.wheelSizeMaxVal = wheelSizeMaxVal;
-                currentPreset.wheelWidthMinVal = wheelWidthMinVal;
-                currentPreset.wheelWidthMaxVal = wheelWidthMaxVal;
-                currentPreset = new VStancerPreset(wheelsCount, frontOffset, frontRotation, rearOffset, rearRotation, steeringLock, suspensionHeight, wheelSize, wheelWidth, off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def, wheel_size_def, wheel_width_def);
+                currentPreset = new VStancerPreset(wheelsCount, frontOffset, frontRotation, rearOffset, rearRotation, steeringLock, suspensionHeight, wheelSize, wheelWidth, wheelColSize, wheelColWidth, off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def, wheel_size_def, wheel_width_def, wheel_col_size_def, wheel_col_width_def);
                 PresetChanged?.Invoke(this, EventArgs.Empty);
             }
             else
@@ -692,6 +742,10 @@ namespace Vstancer.Client
                     UpdateFloatDecorator(vehicle, DefaultWheelSizeID, wheel_size_def, wheelSize);
                 if (enableWW)
                     UpdateFloatDecorator(vehicle, DefaultWheelWidthID, wheel_width_def, wheelWidth);
+                if (enableWCS)
+                    UpdateFloatDecorator(vehicle, DefaultWheelColSizeID, wheel_col_size_def, wheelColSize);
+                if (enableWCW)
+                    UpdateFloatDecorator(vehicle, DefaultWheelColWidthID, wheel_col_width_def, wheelColWidth);
 
                 UpdateFloatDecorator(vehicle, FrontOffsetID, frontOffset, off_f_def);
                 UpdateFloatDecorator(vehicle, FrontRotationID, frontRotation, rot_f_def);
@@ -705,6 +759,10 @@ namespace Vstancer.Client
                     UpdateFloatDecorator(vehicle, WheelSizeID, wheelSize, wheel_size_def);
                 if (enableWW)
                     UpdateFloatDecorator(vehicle, WheelWidthID, wheelWidth, wheel_width_def);
+                if (enableWCS)
+                    UpdateFloatDecorator(vehicle, WheelColSizeID, wheelColSize, wheel_col_size_def);
+                if (enableWCW)
+                    UpdateFloatDecorator(vehicle, WheelColWidthID, wheelColWidth, wheel_col_width_def);
             }
         }
 
@@ -758,6 +816,10 @@ namespace Vstancer.Client
             float DefaultWheelSize = preset.DefaultWheelSize;
             float WheelWidth = preset.WheelWidth;
             float DefaultWheelWidth = preset.DefaultWheelWidth;
+            float WheelColSize = preset.WheelColSize;
+            float DefaultWheelColSize = preset.DefaultWheelColSize;
+            float WheelColWidth = preset.WheelColWidth;
+            float DefaultWheelColWidth = preset.DefaultWheelColWidth;
             int frontCount = preset.FrontWheelsCount;
 
             UpdateFloatDecorator(vehicle, DefaultFrontOffsetID, DefaultOffsetX[0], OffsetX[0]);
@@ -772,6 +834,10 @@ namespace Vstancer.Client
                 UpdateFloatDecorator(vehicle, DefaultWheelSizeID, DefaultWheelSize, WheelSize);
             if (enableWW)
                 UpdateFloatDecorator(vehicle, DefaultWheelWidthID, DefaultWheelWidth, WheelWidth);
+            if (enableWCS)
+                UpdateFloatDecorator(vehicle, DefaultWheelColSizeID, DefaultWheelColSize, WheelColSize);
+            if (enableWCW)
+                UpdateFloatDecorator(vehicle, DefaultWheelColWidthID, DefaultWheelColWidth, WheelColWidth);
 
             UpdateFloatDecorator(vehicle, FrontOffsetID, OffsetX[0], DefaultOffsetX[0]);
             UpdateFloatDecorator(vehicle, FrontRotationID, RotationY[0], DefaultRotationY[0]);
@@ -785,6 +851,10 @@ namespace Vstancer.Client
                 UpdateFloatDecorator(vehicle, DefaultWheelSizeID, WheelSize, DefaultWheelSize);
             if (enableWW)
                 UpdateFloatDecorator(vehicle, DefaultWheelWidthID, WheelWidth, DefaultWheelWidth);
+            if (enableWCS)
+                UpdateFloatDecorator(vehicle, DefaultWheelColSizeID, WheelColSize, DefaultWheelColSize);
+            if (enableWCW)
+                UpdateFloatDecorator(vehicle, DefaultWheelColWidthID, WheelColWidth, DefaultWheelColWidth);
         }
 
         /// <summary>
@@ -809,6 +879,9 @@ namespace Vstancer.Client
             float susp_height_def = DecorExistOn(vehicle, DefaultSuspensionHeightID) ? DecorGetFloat(vehicle, DefaultSuspensionHeightID) : GetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise");
             float wheel_size_def = DecorExistOn(vehicle, DefaultWheelSizeID) ? DecorGetFloat(vehicle, DefaultWheelSizeID) : GetVehicleWheelSize(vehicle);
             float wheel_width_def = DecorExistOn(vehicle, DefaultWheelWidthID) ? DecorGetFloat(vehicle, DefaultWheelWidthID) : GetVehicleWheelWidth(vehicle);
+            float wheel_col_size_def = DecorExistOn(vehicle, DefaultWheelColSizeID) ? DecorGetFloat(vehicle, DefaultWheelColSizeID) : GetVehicleWheelTireColliderSize(vehicle, 0);
+            float wheel_col_width_def = DecorExistOn(vehicle, DefaultWheelColWidthID) ? DecorGetFloat(vehicle, DefaultWheelColWidthID) : GetVehicleWheelTireColliderWidth(vehicle, 0);
+
 
             float off_f = DecorExistOn(vehicle, FrontOffsetID) ? DecorGetFloat(vehicle, FrontOffsetID) : off_f_def;
             float rot_f = DecorExistOn(vehicle, FrontRotationID) ? DecorGetFloat(vehicle, FrontRotationID) : rot_f_def;
@@ -818,8 +891,10 @@ namespace Vstancer.Client
             float susp_height = DecorExistOn(vehicle, SuspensionHeightID) ? DecorGetFloat(vehicle, SuspensionHeightID) : susp_height_def;
             float wheel_size = DecorExistOn(vehicle, WheelSizeID) ? DecorGetFloat(vehicle, WheelSizeID) : wheel_size_def;
             float wheel_width = DecorExistOn(vehicle, WheelWidthID) ? DecorGetFloat(vehicle, WheelWidthID) : wheel_width_def;
+            float wheel_col_size = DecorExistOn(vehicle, WheelColSizeID) ? DecorGetFloat(vehicle, WheelColSizeID) : wheel_col_size_def;
+            float wheel_col_width = DecorExistOn(vehicle, WheelColWidthID) ? DecorGetFloat(vehicle, WheelColWidthID) : wheel_col_width_def;
 
-            return new VStancerPreset(wheelsCount, off_f, rot_f, off_r, rot_r, steering_lock, susp_height, wheel_size, wheel_width, off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def, wheel_size_def, wheel_width_def);
+            return new VStancerPreset(wheelsCount, off_f, rot_f, off_r, rot_r, steering_lock, susp_height, wheel_size, wheel_width, wheel_col_size, wheel_col_width, off_f_def, rot_f_def, off_r_def, rot_r_def, steering_lock_def, susp_height_def, wheel_size_def, wheel_width_def, wheel_col_size_def, wheel_col_width_def);
         }
 
         /// <summary>
@@ -847,6 +922,18 @@ namespace Vstancer.Client
             if (enableWW)
                 if (preset.WheelWidth != 0.0f)
                     SetVehicleWheelWidth(vehicle, preset.WheelWidth);
+            if (enableWCS) {
+                SetVehicleWheelTireColliderSize(vehicle, 0, preset.WheelColSize);
+                SetVehicleWheelTireColliderSize(vehicle, 1, preset.WheelColSize);
+                SetVehicleWheelTireColliderSize(vehicle, 2, preset.WheelColSize);
+                SetVehicleWheelTireColliderSize(vehicle, 3, preset.WheelColSize);
+            }
+            if (enableWCW) {
+                SetVehicleWheelTireColliderWidth(vehicle, 0, preset.WheelColWidth);
+                SetVehicleWheelTireColliderWidth(vehicle, 1, preset.WheelColWidth);
+                SetVehicleWheelTireColliderWidth(vehicle, 2, preset.WheelColWidth);
+                SetVehicleWheelTireColliderWidth(vehicle, 3, preset.WheelColWidth);
+            }
         }
 
         /// <summary>
@@ -939,6 +1026,26 @@ namespace Vstancer.Client
                         SetVehicleWheelWidth(vehicle, value);
                 }
             }
+
+            if (enableWCS) {
+                if (DecorExistOn(vehicle, WheelColSizeID)) {
+                    float value = DecorGetFloat(vehicle, WheelColSizeID);
+                    SetVehicleWheelTireColliderSize(vehicle, 0, value);
+                    SetVehicleWheelTireColliderSize(vehicle, 1, value);
+                    SetVehicleWheelTireColliderSize(vehicle, 2, value);
+                    SetVehicleWheelTireColliderSize(vehicle, 3, value);
+                }
+            }
+
+            if (enableWCW) {
+                if (DecorExistOn(vehicle, WheelColWidthID)) {
+                    float value = DecorGetFloat(vehicle, WheelColWidthID);
+                    SetVehicleWheelTireColliderWidth(vehicle, 0, value);
+                    SetVehicleWheelTireColliderWidth(vehicle, 1, value);
+                    SetVehicleWheelTireColliderWidth(vehicle, 2, value);
+                    SetVehicleWheelTireColliderWidth(vehicle, 3, value);
+                }
+            }
         }
 
         /// <summary>
@@ -1002,6 +1109,16 @@ namespace Vstancer.Client
                 s.AppendLine($"{WheelWidthID}: {value}");
             }
 
+            if (DecorExistOn(vehicle, WheelColSizeID)) {
+                float value = DecorGetFloat(vehicle, WheelColSizeID);
+                s.AppendLine($"{WheelColSizeID}: {value}");
+            }
+
+            if (DecorExistOn(vehicle, WheelColWidthID)) {
+                float value = DecorGetFloat(vehicle, WheelColWidthID);
+                s.AppendLine($"{WheelColWidthID}: {value}");
+            }
+
             Debug.WriteLine(s.ToString());
         }
 
@@ -1035,6 +1152,8 @@ namespace Vstancer.Client
                 DecorExistOn(entity, SuspensionHeightID) ||
                 DecorExistOn(entity, WheelWidthID) ||
                 DecorExistOn(entity, WheelSizeID) ||
+                DecorExistOn(entity, WheelColWidthID) ||
+                DecorExistOn(entity, WheelColSizeID) ||
                 DecorExistOn(entity, DefaultFrontOffsetID) ||
                 DecorExistOn(entity, DefaultFrontRotationID) ||
                 DecorExistOn(entity, DefaultRearOffsetID) ||
@@ -1042,7 +1161,9 @@ namespace Vstancer.Client
                 DecorExistOn(entity, DefaultSteeringLockID) ||
                 DecorExistOn(entity, DefaultSuspensionHeightID) ||
                 DecorExistOn(entity, DefaultWheelSizeID) ||
-                DecorExistOn(entity, DefaultWheelWidthID)
+                DecorExistOn(entity, DefaultWheelWidthID) ||
+                DecorExistOn(entity, DefaultWheelColSizeID) ||
+                DecorExistOn(entity, DefaultWheelColWidthID)
                 );
         }
 
@@ -1083,6 +1204,10 @@ namespace Vstancer.Client
                 wheelSizeMaxVal = config.GetFloatValue("wheelSizeMaxVal", wheelSizeMaxVal);
                 wheelWidthMinVal = config.GetFloatValue("wheelWidthMinVal", wheelWidthMinVal);
                 wheelWidthMaxVal = config.GetFloatValue("wheelWidthMaxVal", wheelWidthMaxVal);
+                wheelColSizeMinVal = config.GetFloatValue("wheelColSizeMinVal", wheelColSizeMinVal);
+                wheelColSizeMaxVal = config.GetFloatValue("wheelColSizeMaxVal", wheelColSizeMaxVal);
+                wheelColWidthMinVal = config.GetFloatValue("wheelColWidthMinVal", wheelColWidthMinVal);
+                wheelColWidthMaxVal = config.GetFloatValue("wheelColWidthMaxVal", wheelColWidthMaxVal);
                 timer = config.GetLongValue("timer", timer);
                 debug = config.GetBoolValue("debug", debug);
                 exposeCommand = config.GetBoolValue("exposeCommand", exposeCommand);
@@ -1091,8 +1216,10 @@ namespace Vstancer.Client
                 enableSL = config.GetBoolValue("enableSL", enableSL);
                 enableWS = config.GetBoolValue("enableWS", enableWS);
                 enableWW = config.GetBoolValue("enableWW", enableWW);
+                enableWCS = config.GetBoolValue("enableWCS", enableWCS);
+                enableWCW = config.GetBoolValue("enableWCW", enableWCW);
 
-                Debug.WriteLine($"{ScriptName}: Settings {nameof(frontMaxOffset)}={frontMaxOffset} {nameof(frontMaxCamber)}={frontMaxCamber} {nameof(rearMaxOffset)}={rearMaxOffset} {nameof(rearMaxCamber)}={rearMaxCamber} {nameof(steeringLockMinVal)}={steeringLockMinVal} {nameof(steeringLockMaxVal)}={steeringLockMaxVal} {nameof(suspensionHeightMinVal)}={suspensionHeightMinVal} {nameof(suspensionHeightMaxVal)}={suspensionHeightMaxVal} {nameof(wheelSizeMinVal)}={wheelSizeMinVal} {nameof(wheelSizeMaxVal)}={wheelSizeMaxVal} {nameof(wheelWidthMinVal)}={wheelWidthMinVal} {nameof(wheelWidthMaxVal)}={wheelWidthMaxVal} {nameof(timer)}={timer} {nameof(debug)}={debug} {nameof(ScriptRange)}={ScriptRange}");
+                Debug.WriteLine($"{ScriptName}: Settings {nameof(frontMaxOffset)}={frontMaxOffset} {nameof(frontMaxCamber)}={frontMaxCamber} {nameof(rearMaxOffset)}={rearMaxOffset} {nameof(rearMaxCamber)}={rearMaxCamber} {nameof(steeringLockMinVal)}={steeringLockMinVal} {nameof(steeringLockMaxVal)}={steeringLockMaxVal} {nameof(suspensionHeightMinVal)}={suspensionHeightMinVal} {nameof(suspensionHeightMaxVal)}={suspensionHeightMaxVal} {nameof(wheelSizeMinVal)}={wheelSizeMinVal} {nameof(wheelSizeMaxVal)}={wheelSizeMaxVal} {nameof(wheelWidthMinVal)}={wheelWidthMinVal} {nameof(wheelWidthMaxVal)}={wheelWidthMaxVal} {nameof(wheelColSizeMinVal)}={wheelColSizeMinVal} {nameof(wheelColSizeMaxVal)}={wheelColSizeMaxVal} {nameof(wheelColWidthMinVal)}={wheelColWidthMinVal} {nameof(wheelColWidthMaxVal)}={wheelColWidthMaxVal} {nameof(timer)}={timer} {nameof(debug)}={debug} {nameof(ScriptRange)}={ScriptRange}");
             }
         }
 

@@ -91,6 +91,7 @@ namespace Vstancer.Client
         public bool enableWW = true;
         public bool enableWCS = true;
         public bool enableWCW = true;
+        public bool enableBinding = true;
 
         private float FloatPrecision = 0.001f;
         private long timer = 1000;
@@ -235,10 +236,18 @@ namespace Vstancer.Client
             else if (id == WheelSizeID) {
                 currentPreset.SetWheelSize(value);
                 defaultValue = currentPreset.DefaultWheelSize;
+                if (enableBinding) {
+                    if (value != 0.0f)
+                        currentPreset.SetWheelColSize(value/2f);
+                }
             }
             else if (id == WheelWidthID) {
                 currentPreset.SetWheelWidth(value);
                 defaultValue = currentPreset.DefaultWheelWidth;
+                if (enableBinding) {
+                    if(value != 0.0f)
+                        currentPreset.SetWheelColWidth(value / 2f);
+                }
             }
             else if (id == WheelColSizeID) {
                 currentPreset.SetWheelColSize(value);
@@ -685,42 +694,62 @@ namespace Vstancer.Client
                 susp_height_def = 0.0f;
             }
 
-            if (enableWCS) {
-                if (defaultWheelColSize != null && defaultWheelColSize is float) {
-                    wheel_col_size_def = (float)defaultWheelColSize;
-                } else {
-                    wheel_col_size_def = DecorExistOn(vehicle, DefaultWheelColSizeID) ? DecorGetFloat(vehicle, DefaultWheelColSizeID) : GetVehicleWheelTireColliderSize(vehicle, 0);
-                }
-            } else {
-                wheel_col_size_def = 0.1f;
-            }
 
-            if (enableWCW) {
-                if (defaultWheelColWidth != null && defaultWheelColWidth is float) {
-                    wheel_col_width_def = (float)defaultWheelColWidth;
+            if (!enableBinding) {
+                if (enableWCS) {
+                    if (defaultWheelColSize != null && defaultWheelColSize is float) {
+                        wheel_col_size_def = (float)defaultWheelColSize;
+                    } else {
+                        wheel_col_size_def = DecorExistOn(vehicle, DefaultWheelColSizeID) ? DecorGetFloat(vehicle, DefaultWheelColSizeID) : GetVehicleWheelTireColliderSize(vehicle, 0);
+                    }
                 } else {
-                    wheel_col_width_def = DecorExistOn(vehicle, DefaultWheelColWidthID) ? DecorGetFloat(vehicle, DefaultWheelColWidthID) : GetVehicleWheelTireColliderWidth(vehicle, 0);
+                    wheel_col_size_def = GetVehicleWheelTireColliderSize(vehicle, 0);
+                }
+
+                if (enableWCW) {
+                    if (defaultWheelColWidth != null && defaultWheelColWidth is float) {
+                        wheel_col_width_def = (float)defaultWheelColWidth;
+                    } else {
+                        wheel_col_width_def = DecorExistOn(vehicle, DefaultWheelColWidthID) ? DecorGetFloat(vehicle, DefaultWheelColWidthID) : GetVehicleWheelTireColliderWidth(vehicle, 0);
+                    }
+                } else {
+                    wheel_col_width_def = GetVehicleWheelTireColliderWidth(vehicle, 0);
                 }
             } else {
-                wheel_col_width_def = 0.1f;
+                wheel_col_width_def = GetVehicleWheelTireColliderWidth(vehicle, 0);
+                wheel_col_size_def = GetVehicleWheelTireColliderSize(vehicle, 0);
             }
 
             if (defaultWheelSize != null && defaultWheelSize is float) {
-                if ((float)defaultWheelSize != 0.0f)
+                if ((float)defaultWheelSize != 0.0f) {
                     wheel_size_def = (float)defaultWheelSize;
-                else
+                    if (enableBinding)
+                        wheel_col_size_def = ((float)defaultWheelSize)/2f;
+                } else {
                     wheel_size_def = GetVehicleWheelSize(vehicle);
+                    if (enableBinding)
+                        wheel_col_size_def = (wheel_size_def != 0.0f) ? (wheel_size_def / 2f) : (GetVehicleWheelTireColliderSize(vehicle, 0));
+                }
             } else {
                 wheel_size_def = DecorExistOn(vehicle, DefaultWheelSizeID) ? DecorGetFloat(vehicle, DefaultWheelSizeID) : GetVehicleWheelSize(vehicle);
+                if (enableBinding)
+                    wheel_col_size_def = (wheel_size_def != 0.0f) ? (wheel_size_def / 2f) : (GetVehicleWheelTireColliderSize(vehicle, 0));
             }
 
             if (defaultWheelWidth != null && defaultWheelWidth is float) {
-                if ((float)defaultWheelWidth != 0.0f)
+                if ((float)defaultWheelWidth != 0.0f) {
                     wheel_width_def = (float)defaultWheelWidth;
-                else
+                    if (enableBinding)
+                        wheel_col_width_def = ((float)defaultWheelWidth) / 2f;
+                } else {
                     wheel_width_def = GetVehicleWheelWidth(vehicle);
+                    if (enableBinding)
+                        wheel_col_width_def = (wheel_width_def != 0.0f) ? (wheel_width_def / 2f) : (GetVehicleWheelTireColliderWidth(vehicle, 0));
+                }
             } else {
                 wheel_width_def = DecorExistOn(vehicle, DefaultWheelWidthID) ? DecorGetFloat(vehicle, DefaultWheelWidthID) : GetVehicleWheelWidth(vehicle);
+                if (enableBinding)
+                    wheel_col_width_def = (wheel_width_def != 0.0f) ? (wheel_width_def / 2f) : (GetVehicleWheelTireColliderWidth(vehicle, 0));
             }
 
             if (vehicle == currentVehicle)
@@ -916,23 +945,41 @@ namespace Vstancer.Client
                 SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSteeringLock", preset.SteeringLock);
             if (enableSH)
                 SetVehicleHandlingFloat(vehicle, "CHandlingData", "fSuspensionRaise", preset.SuspensionHeight);
-            if (enableWS)
-                if(preset.WheelSize != 0.0f)
+            if (enableWS) {
+                if (preset.WheelSize != 0.0f) {
                     SetVehicleWheelSize(vehicle, preset.WheelSize);
-            if (enableWW)
-                if (preset.WheelWidth != 0.0f)
-                    SetVehicleWheelWidth(vehicle, preset.WheelWidth);
-            if (enableWCS) {
-                SetVehicleWheelTireColliderSize(vehicle, 0, preset.WheelColSize);
-                SetVehicleWheelTireColliderSize(vehicle, 1, preset.WheelColSize);
-                SetVehicleWheelTireColliderSize(vehicle, 2, preset.WheelColSize);
-                SetVehicleWheelTireColliderSize(vehicle, 3, preset.WheelColSize);
+                    if (enableBinding) {
+                        SetVehicleWheelTireColliderSize(vehicle, 0, preset.WheelSize / 2f);
+                        SetVehicleWheelTireColliderSize(vehicle, 1, preset.WheelSize / 2f);
+                        SetVehicleWheelTireColliderSize(vehicle, 2, preset.WheelSize / 2f);
+                        SetVehicleWheelTireColliderSize(vehicle, 3, preset.WheelSize / 2f);
+                    }
+                }
             }
-            if (enableWCW) {
-                SetVehicleWheelTireColliderWidth(vehicle, 0, preset.WheelColWidth);
-                SetVehicleWheelTireColliderWidth(vehicle, 1, preset.WheelColWidth);
-                SetVehicleWheelTireColliderWidth(vehicle, 2, preset.WheelColWidth);
-                SetVehicleWheelTireColliderWidth(vehicle, 3, preset.WheelColWidth);
+            if (enableWW) {
+                if (preset.WheelWidth != 0.0f) {
+                    SetVehicleWheelWidth(vehicle, preset.WheelWidth);
+                    if (enableBinding) {
+                        SetVehicleWheelTireColliderWidth(vehicle, 0, preset.WheelWidth / 2f);
+                        SetVehicleWheelTireColliderWidth(vehicle, 1, preset.WheelWidth / 2f);
+                        SetVehicleWheelTireColliderWidth(vehicle, 2, preset.WheelWidth / 2f);
+                        SetVehicleWheelTireColliderWidth(vehicle, 3, preset.WheelWidth / 2f);
+                    }
+                }
+            }
+            if (!enableBinding) {
+                if (enableWCS) {
+                    SetVehicleWheelTireColliderSize(vehicle, 0, preset.WheelColSize);
+                    SetVehicleWheelTireColliderSize(vehicle, 1, preset.WheelColSize);
+                    SetVehicleWheelTireColliderSize(vehicle, 2, preset.WheelColSize);
+                    SetVehicleWheelTireColliderSize(vehicle, 3, preset.WheelColSize);
+                }
+                if (enableWCW) {
+                    SetVehicleWheelTireColliderWidth(vehicle, 0, preset.WheelColWidth);
+                    SetVehicleWheelTireColliderWidth(vehicle, 1, preset.WheelColWidth);
+                    SetVehicleWheelTireColliderWidth(vehicle, 2, preset.WheelColWidth);
+                    SetVehicleWheelTireColliderWidth(vehicle, 3, preset.WheelColWidth);
+                }
             }
         }
 
@@ -1014,16 +1061,24 @@ namespace Vstancer.Client
             if (enableWS) {
                 if (DecorExistOn(vehicle, WheelSizeID)) {
                     float value = DecorGetFloat(vehicle, WheelSizeID);
-                    if (value != 0.0f)
+                    if (value != 0.0f) {
                         SetVehicleWheelSize(vehicle, value);
+                        if (enableBinding) {
+                            SetVehicleWheelTireColliderSize(vehicle, 0, value/2f);
+                        }
+                    }
                 }
             }
 
             if (enableWW) {
                 if (DecorExistOn(vehicle, WheelWidthID)) {
                     float value = DecorGetFloat(vehicle, WheelWidthID);
-                    if (value != 0.0f)
+                    if (value != 0.0f) {
                         SetVehicleWheelWidth(vehicle, value);
+                        if (enableBinding) {
+                            SetVehicleWheelTireColliderWidth(vehicle, 0, value / 2f);
+                        }
+                    }
                 }
             }
 
@@ -1218,6 +1273,7 @@ namespace Vstancer.Client
                 enableWW = config.GetBoolValue("enableWW", enableWW);
                 enableWCS = config.GetBoolValue("enableWCS", enableWCS);
                 enableWCW = config.GetBoolValue("enableWCW", enableWCW);
+                enableBinding = config.GetBoolValue("enableBinding", enableBinding);
 
                 Debug.WriteLine($"{ScriptName}: Settings {nameof(frontMaxOffset)}={frontMaxOffset} {nameof(frontMaxCamber)}={frontMaxCamber} {nameof(rearMaxOffset)}={rearMaxOffset} {nameof(rearMaxCamber)}={rearMaxCamber} {nameof(steeringLockMinVal)}={steeringLockMinVal} {nameof(steeringLockMaxVal)}={steeringLockMaxVal} {nameof(suspensionHeightMinVal)}={suspensionHeightMinVal} {nameof(suspensionHeightMaxVal)}={suspensionHeightMaxVal} {nameof(wheelSizeMinVal)}={wheelSizeMinVal} {nameof(wheelSizeMaxVal)}={wheelSizeMaxVal} {nameof(wheelWidthMinVal)}={wheelWidthMinVal} {nameof(wheelWidthMaxVal)}={wheelWidthMaxVal} {nameof(wheelColSizeMinVal)}={wheelColSizeMinVal} {nameof(wheelColSizeMaxVal)}={wheelColSizeMaxVal} {nameof(wheelColWidthMinVal)}={wheelColWidthMinVal} {nameof(wheelColWidthMaxVal)}={wheelColWidthMaxVal} {nameof(timer)}={timer} {nameof(debug)}={debug} {nameof(ScriptRange)}={ScriptRange}");
             }

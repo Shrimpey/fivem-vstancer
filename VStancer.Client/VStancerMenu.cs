@@ -90,6 +90,7 @@ namespace Vstancer.Client {
         private bool enableWW => vstancerEditor.enableWW;
         private bool enableWCS => vstancerEditor.enableWCS;
         private bool enableWCW => vstancerEditor.enableWCW;
+        private bool enableBinding => vstancerEditor.enableBinding;
 
         #endregion
 
@@ -224,18 +225,20 @@ namespace Vstancer.Client {
                 var newitemSH = new MenuDynamicListItem("Suspension Height", currentPreset.SuspensionHeight.ToString("F3"), callbackSH) { ItemData = SuspensionHeightID };
                 editorMenu.AddMenuItem(newitemSH);
             }
+            
             // Wheel size, custom min max
             if (enableWS) {
                 var callbackWS = FloatChangeCallback("Wheel size", currentPreset.WheelSize, wheelSizeMinVal, wheelSizeMaxVal, 0.025f);
                 var newitemWS = new MenuDynamicListItem("Wheel size", currentPreset.WheelSize.ToString("F3"), callbackWS, "Only works on non-default wheels") { ItemData = WheelSizeID };
                 editorMenu.AddMenuItem(newitemWS);
-                
+
                 if (hideWheelSize) {
                     newitemWS.Enabled = false;
                 } else {
                     newitemWS.Enabled = true;
                 }
             }
+
             // Wheel width, custom min max
             if (enableWW) {
                 var callbackWW = FloatChangeCallback("Wheel width", currentPreset.WheelWidth, wheelWidthMinVal, wheelWidthMaxVal, 0.025f);
@@ -248,17 +251,21 @@ namespace Vstancer.Client {
                     newitemWW.Enabled = true;
                 }
             }
-            // Wheel collider size, custom min max
-            if (enableWCS) {
-                var callbackWCS = FloatChangeCallback("Wheel col size", currentPreset.WheelColSize, wheelColSizeMinVal, wheelColSizeMaxVal, 0.025f);
-                var newitemWCS = new MenuDynamicListItem("Wheel col size", currentPreset.WheelColSize.ToString("F3"), callbackWCS, "Modify collider radius") { ItemData = WheelColSizeID };
-                editorMenu.AddMenuItem(newitemWCS);
-            }
-            // Wheel collider width, custom min max
-            if (enableWCW) {
-                var callbackWCW = FloatChangeCallback("Wheel col width", currentPreset.WheelColWidth, wheelColWidthMinVal, wheelColWidthMaxVal, 0.025f);
-                var newitemWCW = new MenuDynamicListItem("Wheel col width", currentPreset.WheelColWidth.ToString("F3"), callbackWCW, "Modify collider width") { ItemData = WheelColWidthID };
-                editorMenu.AddMenuItem(newitemWCW);
+
+            // Only show collider size/width when not bound to visual params
+            if (!enableBinding) {
+                // Wheel collider size, custom min max
+                if (enableWCS) {
+                    var callbackWCS = FloatChangeCallback("Wheel col size", currentPreset.WheelColSize, wheelColSizeMinVal, wheelColSizeMaxVal, 0.025f);
+                    var newitemWCS = new MenuDynamicListItem("Wheel col size", currentPreset.WheelColSize.ToString("F3"), callbackWCS, "Modify collider radius") { ItemData = WheelColSizeID };
+                    editorMenu.AddMenuItem(newitemWCS);
+                }
+                // Wheel collider width, custom min max
+                if (enableWCW) {
+                    var callbackWCW = FloatChangeCallback("Wheel col width", currentPreset.WheelColWidth, wheelColWidthMinVal, wheelColWidthMaxVal, 0.025f);
+                    var newitemWCW = new MenuDynamicListItem("Wheel col width", currentPreset.WheelColWidth.ToString("F3"), callbackWCW, "Modify collider width") { ItemData = WheelColWidthID };
+                    editorMenu.AddMenuItem(newitemWCW);
+                }
             }
 
             editorMenu.AddMenuItem(new MenuItem("Reset", "Restores the default values") { ItemData = ResetID });
@@ -344,6 +351,7 @@ namespace Vstancer.Client {
                         float wheelColSizeTemp = (loadedPreset.Length > 16) ? (loadedPreset[16]) : (GetVehicleWheelTireColliderSize(vehicle, 0));
                         float wheelColWidthTemp = (loadedPreset.Length > 16) ? (loadedPreset[17]) : (GetVehicleWheelTireColliderWidth(vehicle, 0));
                         vstancerEditor.SetVstancerPreset(vehicle, loadedPreset[0], loadedPreset[1], loadedPreset[2], loadedPreset[3], steeringLockTemp, suspensionHeightTemp, wheelSizeTemp, wheelWidthTemp, wheelColSizeTemp, wheelColWidthTemp);
+
                         Debug.WriteLine($"[vStancer] Loaded preset for " + name + "!");
                     } else {
                         Debug.WriteLine($"[vStancer] Preset for " + name + " is null!");
